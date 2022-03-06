@@ -3,6 +3,7 @@ const Game = {
   map: {},
   player: null,
   engine: null,
+  ananas: null,
 
   init: function () {
     // create and store ROT console
@@ -47,6 +48,10 @@ const Game = {
       // remove empty cell from list and get its key
       const [key] = freeCells.splice(index, 1);
       this.map[key] = 2;
+
+      if (i === 0) {
+        this.ananas = key;
+      }
     }
   },
 
@@ -100,6 +105,11 @@ Player.prototype.handleEvent = function (event) {
   const code = event.code;
   console.log(code);
 
+  if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space') {
+    this.checkBox();
+    return;
+  }
+
   if (!(code in keyMap)) {
     return;
   }
@@ -119,6 +129,19 @@ Player.prototype.handleEvent = function (event) {
   this.draw();
   window.removeEventListener('keydown', this);
   Game.engine.unlock();
+};
+
+Player.prototype.checkBox = function () {
+  const key = this.x + ',' + this.y;
+  if (Game.map[key] !== 2) {
+    alert('There is no box here!');
+  } else if (key === Game.ananas) {
+    alert('Horray! You found an ananas and won this game.');
+    Game.engine.lock();
+    window.removeEventListener('keydown', this);
+  } else {
+    alert('This box is empty. :-(');
+  }
 };
 
 window.onload = Game.init();
