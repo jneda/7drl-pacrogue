@@ -4,6 +4,7 @@ const Game = {
   player: null,
   engine: null,
   ananas: null,
+  pedro: null,
 
   init: function () {
     // create and store ROT console
@@ -17,6 +18,7 @@ const Game = {
     // set up the scheduler
     const scheduler = new ROT.Scheduler.Simple();
     scheduler.add(this.player, true);
+    scheduler.add(this.pedro, true);
     this.engine = new ROT.Engine(scheduler);
     this.engine.start();
   },
@@ -38,7 +40,8 @@ const Game = {
     this.generateGoodies(freeCells);
     this.drawMap();
 
-    this.createPlayer(freeCells);
+    this.player = this.createBeing(Player, freeCells);
+    this.pedro = this.createBeing(Pedro, freeCells);
   },
 
   generateGoodies: function (freeCells) {
@@ -55,13 +58,13 @@ const Game = {
     }
   },
 
-  createPlayer: function (freeCells) {
+  createBeing: function (what, freeCells) {
     const index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
     const [key] = freeCells.splice(index, 1);
     let [x, y] = key.split(',');
     x = parseInt(x);
     y = parseInt(y);
-    this.player = new Player(x, y);
+    return new what(x, y);
   },
 
   drawMap: function () {
@@ -141,6 +144,54 @@ Player.prototype.checkBox = function () {
     window.removeEventListener('keydown', this);
   } else {
     alert('This box is empty. :-(');
+  }
+};
+
+Player.prototype.getX = function () {
+  return this.x;
+};
+
+Player.prototype.getY = function () {
+  return this.y;
+};
+
+const Pedro = function (x, y) {
+  this.x = x;
+  this.y = y;
+  this.draw();
+};
+
+Pedro.prototype.draw = function () {
+  Game.display.draw(this.x, this.y, 'P', 'red');
+};
+
+Pedro.prototype.act = function () {
+  const [x, y] = [Game.player.getX(), Game.player.getY()];
+
+  const isPassable = function (x, y) {
+    const tileKey = x + ',' + y;
+    return tileKey in Game.map && Game.map[tileKey] !== 1;
+  };
+
+  const astar = new ROT.Path.AStar(x, y, isPassable, { topology: 4 });
+
+  const path = [];
+  const getPath = function (x, y) {
+    path.push([x, y]);
+  };
+  astar.compute(this.x, this.y, getPath);
+  path.shift(); // remove Pedro's position
+  console.log(path);
+
+  if (path.length === 1) {
+    Game.engine.lock();
+    alert('Game over - you were captured by Pedro!');
+  } else {
+    const [x, y] = path[0];
+    Game.display.draw(this.x, this.y, Game.map[this.x + ',' + this.y]);
+    this.x = x;
+    this.y = y;
+    this.draw();
   }
 };
 
