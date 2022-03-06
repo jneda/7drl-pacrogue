@@ -21,12 +21,15 @@ class Pedro {
   act() {
     const [x, y] = [Game.player.getX(), Game.player.getY()];
     const thisKey = Game.getActorKey(this);
+    const playerKey = Game.getActorKey(Game.player);
 
     const isPassable = function (x, y) {
       const tileKey = Game.toKey(x, y);
       let hasActor = false;
-      if (tileKey !== thisKey) {
+      // if (tileKey !== thisKey && tileKey !== playerKey) {
+      if (tileKey !== thisKey && tileKey !== playerKey) {
         // do not check the enemy's own tile else pathfinding fails
+        // do not check the player's tile else our lose condition logic also fails
         hasActor = Game.actorKeys.indexOf(tileKey) >= 0;
       }
       const isInBounds = tileKey in Game.map;
@@ -46,10 +49,11 @@ class Pedro {
 
     if (path.length <= 1) {
       Game.engine.lock();
-      alert('Game over - you were captured by Pedro!');
       this.draw();
+      alert('Game over - you were captured by Pedro!');
     } else {
-      const destinationKey = path[0];
+      const [x, y] = path[0];
+      const destinationKey = Game.toKey(x, y);
 
       const originKey = Game.toKey(this.x, this.y);
       const tileGlyph = Glyphs[Game.map[originKey]];
@@ -57,7 +61,6 @@ class Pedro {
 
       Game.updateActorKey(originKey, destinationKey);
 
-      const [x, y] = destinationKey;
       this.x = x;
       this.y = y;
       this.draw();

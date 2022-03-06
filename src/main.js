@@ -68,7 +68,7 @@ const Game = {
     this.actors.push(this.createBeing(Player));
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       const pedro = this.createBeing(Pedro);
       this.actors.push(pedro);
       this.actorKeys.push(this.getActorKey(pedro));
