@@ -1,3 +1,9 @@
+const Glyphs = {
+  0: ['', '#b2b8c2', '#b2b8c2'],
+  1: ['', '#15171c', '#15171c'],
+  2: ['u', '#15171c', '#b2b8c2'],
+};
+
 const Game = {
   display: null,
   map: {},
@@ -72,7 +78,7 @@ const Game = {
       let [x, y] = key.split(',');
       x = parseInt(x);
       y = parseInt(y);
-      this.display.draw(x, y, this.map[key]);
+      this.display.draw(x, y, ...Glyphs[this.map[key]]);
     }
   },
 };
@@ -85,7 +91,7 @@ const Player = function (x, y) {
 };
 
 Player.prototype.draw = function () {
-  Game.display.draw(this.x, this.y, '@', '#ff0');
+  Game.display.draw(this.x, this.y, '@', '#c6725a', '#b2b8c2');
 };
 
 Player.prototype.act = function () {
@@ -126,7 +132,7 @@ Player.prototype.handleEvent = function (event) {
     return;
   }
 
-  Game.display.draw(this.x, this.y, Game.map[this.x + ',' + this.y]);
+  Game.display.draw(this.x, this.y, ...Glyphs[Game.map[this.x + ',' + this.y]]);
   this.x = newX;
   this.y = newY;
   this.draw();
@@ -162,7 +168,7 @@ const Pedro = function (x, y) {
 };
 
 Pedro.prototype.draw = function () {
-  Game.display.draw(this.x, this.y, 'P', 'red');
+  Game.display.draw(this.x, this.y, 'P', '#b14956', '#b2b8c2');
 };
 
 Pedro.prototype.act = function () {
@@ -183,12 +189,13 @@ Pedro.prototype.act = function () {
   path.shift(); // remove Pedro's position
   console.log(path);
 
-  if (path.length === 1) {
+  if (path.length <= 1) {
     Game.engine.lock();
     alert('Game over - you were captured by Pedro!');
+    this.draw();
   } else {
     const [x, y] = path[0];
-    Game.display.draw(this.x, this.y, Game.map[this.x + ',' + this.y]);
+    Game.display.draw(this.x, this.y, ...Glyphs[Game.map[this.x + ',' + this.y]]);
     this.x = x;
     this.y = y;
     this.draw();
