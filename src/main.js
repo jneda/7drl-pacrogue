@@ -13,9 +13,6 @@ const Game = {
     this.generateMap();
     // console.dir(this.map);
 
-    // draw the map
-    this.drawMap();
-
     // set up the scheduler
     const scheduler = new ROT.Scheduler.Simple();
     scheduler.add(this.player, true);
@@ -38,6 +35,7 @@ const Game = {
     ); // necessary to ensure the callback is called within a correct context
 
     this.generateGoodies(freeCells);
+    this.drawMap();
 
     this.createPlayer(freeCells);
   },
@@ -111,7 +109,7 @@ Player.prototype.handleEvent = function (event) {
   const newY = this.y + dy;
   const newKey = newX + ',' + newY;
 
-  if (!(newKey in Game.map)) {
+  if (!(newKey in Game.map) || Game.map[newKey] === 1) {
     return;
   }
 
