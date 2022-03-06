@@ -1,7 +1,15 @@
+const displayConfig = {
+  width: 30,
+  height: 15,
+  fontFamily: 'VGA',
+  fontSize: 32,
+  // forceSquareRatio: true,
+};
+
 const Glyphs = {
   0: ['', '#b2b8c2', '#b2b8c2'],
   1: ['', '#15171c', '#15171c'],
-  2: ['u', '#15171c', '#b2b8c2'],
+  2: ['¤', '#15171c', '#b2b8c2'],
 };
 
 const Game = {
@@ -14,7 +22,7 @@ const Game = {
 
   init: function () {
     // create and store ROT console
-    this.display = new ROT.Display();
+    this.display = new ROT.Display(displayConfig);
     document.getElementById('canvas').appendChild(this.display.getContainer());
 
     // generate the map
@@ -30,7 +38,7 @@ const Game = {
   },
 
   generateMap: function () {
-    const digger = new ROT.Map.Digger();
+    const digger = new ROT.Map.IceyMaze(displayConfig.width, displayConfig.height);
     const freeCells = [];
 
     digger.create(
@@ -91,7 +99,7 @@ const Player = function (x, y) {
 };
 
 Player.prototype.draw = function () {
-  Game.display.draw(this.x, this.y, '@', '#c6725a', '#b2b8c2');
+  Game.display.draw(this.x, this.y, '@', '#fdc253', '#c6725a');
 };
 
 Player.prototype.act = function () {
@@ -168,7 +176,7 @@ const Pedro = function (x, y) {
 };
 
 Pedro.prototype.draw = function () {
-  Game.display.draw(this.x, this.y, 'P', '#b14956', '#b2b8c2');
+  Game.display.draw(this.x, this.y, 'P', '#ec5f67', '#b14956');
 };
 
 Pedro.prototype.act = function () {
@@ -195,7 +203,11 @@ Pedro.prototype.act = function () {
     this.draw();
   } else {
     const [x, y] = path[0];
-    Game.display.draw(this.x, this.y, ...Glyphs[Game.map[this.x + ',' + this.y]]);
+    Game.display.draw(
+      this.x,
+      this.y,
+      ...Glyphs[Game.map[this.x + ',' + this.y]]
+    );
     this.x = x;
     this.y = y;
     this.draw();
