@@ -2,7 +2,7 @@ const displayConfig = {
   width: 21,
   height: 21,
   fontFamily: 'VGA',
-  fontSize: 32,
+  fontSize: 16,
   forceSquareRatio: true,
 };
 
@@ -46,6 +46,10 @@ const Game = {
 
     digger.create(
       function (x, y, value) {
+        // carve out the outer ring
+        if (this.isOuterRing(x, y) || this.isInnerRing(x, y)) {
+          value = 0;
+        }
         const key = this.toKey(x, y);
         if (!value) {
           this.freeCells.push(key);
@@ -54,11 +58,70 @@ const Game = {
       }.bind(this)
     ); // necessary to ensure the callback is called within a correct context
 
+    this.spreadRooms();
+
     this.generateGoodies();
     this.drawMap();
 
     this.player = this.createBeing(Player);
     this.pedro = this.createBeing(Pedro);
+  },
+
+  isOuterRing(x, y) {
+    return (
+      ((x === 1 || x === displayConfig.width - 2) &&
+        y > 0 &&
+        y < displayConfig.height - 1) ||
+      ((y === 1 || y === displayConfig.height - 2) &&
+        x > 0 &&
+        x < displayConfig.width - 1)
+    );
+  },
+
+  isInnerRing(x, y) {
+    const midpointX = Math.floor(displayConfig.width / 2);
+    const midpointY = Math.floor(displayConfig.height / 2);
+    const halfSize = 3;
+    const lowXBound = midpointX - halfSize;
+    const highXBound = midpointX + halfSize;
+    const lowYBound = midpointY - halfSize;
+    const highYBound = midpointY + halfSize;
+    return (
+      ((x === lowXBound || x === highXBound) &&
+        y > lowYBound - 1 &&
+        y < highYBound + 1) ||
+      ((y === lowYBound || y === highYBound) &&
+        x > lowXBound - 1 &&
+        x < highXBound + 1)
+    );
+  },
+
+  spreadRooms() {
+    const digger2 = new ROT.Map.Uniform(
+      displayConfig.width,
+      displayConfig.height,
+      {
+        roomWidth: [3, 3],
+        roomHeight: [3, 3],
+        roomDugPercentage: 0.3,
+      }
+    );
+
+    digger2.create();
+
+    const rooms = digger2.getRooms();
+    for (const room of rooms) {
+      // console.dir(room);
+      for (let i = room.getTop(); i <= room.getBottom(); i++) {
+        for (let j = room.getLeft(); j <= room.getRight(); j++) {
+          const key = this.toKey(j, i);
+          if (this.map[key] === 1) {
+            this.freeCells.push(key);
+            this.map[key] = 0;
+          }
+        }
+      }
+    }
   },
 
   toKey(x, y) {
