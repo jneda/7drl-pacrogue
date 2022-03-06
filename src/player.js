@@ -1,21 +1,21 @@
 class Player {
-  constructor (x, y) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
     this.glyph = ['@', '#fdc253', '#15171c'];
     this.draw();
   }
 
-  draw  () {
+  draw() {
     Game.display.draw(this.x, this.y, ...this.glyph);
   }
 
-  act () {
+  act() {
     Game.engine.lock();
     window.addEventListener('keydown', this);
   }
 
-  handleEvent (event) {
+  handleEvent(event) {
     const keyMap = {
       Numpad8: 0,
       Numpad9: 1,
@@ -25,7 +25,7 @@ class Player {
       Numpad1: 5,
       Numpad4: 6,
       Numpad7: 7,
-    }
+    };
 
     const code = event.code;
     // console.log(code);
@@ -51,6 +51,9 @@ class Player {
     const tileKey = Game.toKey(this.x, this.y);
     const tileGlyph = Glyphs[Game.map[tileKey]];
     Game.display.draw(this.x, this.y, ...tileGlyph);
+
+    Game.updateActorKey(tileKey, newKey);
+
     this.x = newX;
     this.y = newY;
     this.draw();
@@ -58,7 +61,7 @@ class Player {
     Game.engine.unlock();
   }
 
-  checkBox () {
+  checkBox() {
     const tileKey = Game.toKey(this.x, this.y);
     if (Game.map[tileKey] !== 2) {
       alert('There is no box here!');
@@ -71,12 +74,11 @@ class Player {
     }
   }
 
-  getX () {
+  getX() {
     return this.x;
-  };
-
-  getY () {
-    return this.y;
   }
 
+  getY() {
+    return this.y;
+  }
 }

@@ -9,17 +9,18 @@ const displayConfig = {
 const Glyphs = {
   0: ['', '#b2b8c2', '#15171c'],
   1: ['', '#ffffff', '#b2b8c2'],
-  2: ['ù', '#b2b8c2', '#15171c'],
+  2: ['¤', '#58c2c0', '#15171c'],
 };
 
 const Game = {
   display: null,
   map: {},
   freeCells: [],
-  player: null,
   engine: null,
+  player: null,
+  actors: [],
+  actorKeys: [],
   ananas: null,
-  pedro: null,
 
   init: function () {
     // create and store ROT console
@@ -32,8 +33,9 @@ const Game = {
 
     // set up the scheduler
     const scheduler = new ROT.Scheduler.Simple();
-    scheduler.add(this.player, true);
-    scheduler.add(this.pedro, true);
+    for (const actor of this.actors) {
+      scheduler.add(actor, true);
+    }
     this.engine = new ROT.Engine(scheduler);
     this.engine.start();
   },
@@ -58,13 +60,19 @@ const Game = {
       }.bind(this)
     ); // necessary to ensure the callback is called within a correct context
 
-    this.spreadRooms();
+    // this.spreadRooms();
 
     this.generateGoodies();
     this.drawMap();
 
-    this.player = this.createBeing(Player);
-    this.pedro = this.createBeing(Pedro);
+    this.actors.push(this.createBeing(Player));
+    this.player = this.actors[0];
+    this.actorKeys.push(this.getActorKey(this.player));
+    for (let i = 0; i < 2; i++) {
+      const pedro = this.createBeing(Pedro);
+      this.actors.push(pedro);
+      this.actorKeys.push(this.getActorKey(pedro));
+    }
   },
 
   isOuterRing(x, y) {
@@ -122,6 +130,17 @@ const Game = {
         }
       }
     }
+  },
+
+  getActorKey(actor) {
+    const actorX = actor.getX();
+    const actorY = actor.getY();
+    return this.toKey(actorX, actorY);
+  },
+
+  updateActorKey(originKey, destinationKey) {
+    const actorId = this.actorKeys.indexOf(originKey);
+    this.actorKeys[actorId] = destinationKey;
   },
 
   toKey(x, y) {

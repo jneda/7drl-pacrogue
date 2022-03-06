@@ -6,16 +6,32 @@ class Pedro {
     this.draw();
   }
 
+  getX() {
+    return this.x;
+  }
+
+  getY() {
+    return this.y;
+  }
+
   draw() {
     Game.display.draw(this.x, this.y, ...this.glyph);
   }
 
   act() {
     const [x, y] = [Game.player.getX(), Game.player.getY()];
+    const thisKey = Game.getActorKey(this);
 
     const isPassable = function (x, y) {
       const tileKey = Game.toKey(x, y);
-      return tileKey in Game.map && Game.map[tileKey] !== 1;
+      let hasActor = false;
+      if (tileKey !== thisKey) {
+        // do not check the enemy's own tile else pathfinding fails
+        hasActor = Game.actorKeys.indexOf(tileKey) >= 0;
+      }
+      const isInBounds = tileKey in Game.map;
+      const isNotWall = Game.map[tileKey] !== 1;
+      return isInBounds && isNotWall && !hasActor;
     };
 
     const astar = new ROT.Path.AStar(x, y, isPassable, { topology: 4 });
@@ -33,10 +49,15 @@ class Pedro {
       alert('Game over - you were captured by Pedro!');
       this.draw();
     } else {
-      const [x, y] = path[0];
-      const tileKey = Game.toKey(this.x, this.y);
-      const tileGlyph = Glyphs[Game.map[tileKey]];
+      const destinationKey = path[0];
+
+      const originKey = Game.toKey(this.x, this.y);
+      const tileGlyph = Glyphs[Game.map[originKey]];
       Game.display.draw(this.x, this.y, ...tileGlyph);
+
+      Game.updateActorKey(originKey, destinationKey);
+
+      const [x, y] = destinationKey;
       this.x = x;
       this.y = y;
       this.draw();
