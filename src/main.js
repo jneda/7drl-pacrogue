@@ -1,20 +1,21 @@
 const displayConfig = {
-  width: 30,
-  height: 15,
+  width: 21,
+  height: 21,
   fontFamily: 'VGA',
   fontSize: 32,
-  // forceSquareRatio: true,
+  forceSquareRatio: true,
 };
 
 const Glyphs = {
-  0: ['', '#b2b8c2', '#b2b8c2'],
-  1: ['', '#15171c', '#15171c'],
-  2: ['¤', '#15171c', '#b2b8c2'],
+  0: ['', '#b2b8c2', '#15171c'],
+  1: ['', '#ffffff', '#b2b8c2'],
+  2: ['ù', '#b2b8c2', '#15171c'],
 };
 
 const Game = {
   display: null,
   map: {},
+  freeCells: [],
   player: null,
   engine: null,
   ananas: null,
@@ -38,32 +39,43 @@ const Game = {
   },
 
   generateMap: function () {
-    const digger = new ROT.Map.IceyMaze(displayConfig.width, displayConfig.height);
-    const freeCells = [];
+    const digger = new ROT.Map.IceyMaze(
+      displayConfig.width,
+      displayConfig.height
+    );
 
     digger.create(
       function (x, y, value) {
-        const key = x + ',' + y;
+        const key = this.toKey(x, y);
         if (!value) {
-          freeCells.push(key);
+          this.freeCells.push(key);
         }
         this.map[key] = value;
       }.bind(this)
     ); // necessary to ensure the callback is called within a correct context
 
-    this.generateGoodies(freeCells);
+    this.generateGoodies();
     this.drawMap();
 
-    this.player = this.createBeing(Player, freeCells);
-    this.pedro = this.createBeing(Pedro, freeCells);
+    this.player = this.createBeing(Player);
+    this.pedro = this.createBeing(Pedro);
   },
 
-  generateGoodies: function (freeCells) {
+  toKey(x, y) {
+    return x + ',' + y;
+  },
+
+  toCoords(key) {
+    let [x, y] = key.split(',');
+    x = parseInt(x);
+    y = parseInt(y);
+    return [x, y];
+  },
+
+  generateGoodies: function () {
     const nbGoodies = 10;
     for (let i = 0; i < nbGoodies; i++) {
-      const index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
-      // remove empty cell from list and get its key
-      const [key] = freeCells.splice(index, 1);
+      const key = this.getRandomFreeCellKey();
       this.map[key] = 2;
 
       if (i === 0) {
@@ -72,146 +84,25 @@ const Game = {
     }
   },
 
-  createBeing: function (what, freeCells) {
-    const index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
-    const [key] = freeCells.splice(index, 1);
-    let [x, y] = key.split(',');
-    x = parseInt(x);
-    y = parseInt(y);
+  createBeing: function (what) {
+    const key = this.getRandomFreeCellKey();
+    const [x, y] = this.toCoords(key);
     return new what(x, y);
+  },
+
+  getRandomFreeCellKey() {
+    const index = Math.floor(ROT.RNG.getUniform() * this.freeCells.length);
+    const [key] = this.freeCells.splice(index, 1);
+    return key;
   },
 
   drawMap: function () {
     for (const key in this.map) {
-      let [x, y] = key.split(',');
-      x = parseInt(x);
-      y = parseInt(y);
-      this.display.draw(x, y, ...Glyphs[this.map[key]]);
+      const [x, y] = this.toCoords(key);
+      const glyph = Glyphs[this.map[key]];
+      this.display.draw(x, y, ...glyph);
     }
   },
-};
-
-// Player is defined by its constructor function
-const Player = function (x, y) {
-  this.x = x;
-  this.y = y;
-  this.draw();
-};
-
-Player.prototype.draw = function () {
-  Game.display.draw(this.x, this.y, '@', '#fdc253', '#c6725a');
-};
-
-Player.prototype.act = function () {
-  Game.engine.lock();
-  window.addEventListener('keydown', this);
-};
-
-Player.prototype.handleEvent = function (event) {
-  const keyMap = {
-    Numpad8: 0,
-    Numpad9: 1,
-    Numpad6: 2,
-    Numpad3: 3,
-    Numpad2: 4,
-    Numpad1: 5,
-    Numpad4: 6,
-    Numpad7: 7,
-  };
-
-  const code = event.code;
-  console.log(code);
-
-  if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space') {
-    this.checkBox();
-    return;
-  }
-
-  if (!(code in keyMap)) {
-    return;
-  }
-
-  const [dx, dy] = ROT.DIRS[8][keyMap[code]];
-  const newX = this.x + dx;
-  const newY = this.y + dy;
-  const newKey = newX + ',' + newY;
-
-  if (!(newKey in Game.map) || Game.map[newKey] === 1) {
-    return;
-  }
-
-  Game.display.draw(this.x, this.y, ...Glyphs[Game.map[this.x + ',' + this.y]]);
-  this.x = newX;
-  this.y = newY;
-  this.draw();
-  window.removeEventListener('keydown', this);
-  Game.engine.unlock();
-};
-
-Player.prototype.checkBox = function () {
-  const key = this.x + ',' + this.y;
-  if (Game.map[key] !== 2) {
-    alert('There is no box here!');
-  } else if (key === Game.ananas) {
-    alert('Horray! You found an ananas and won this game.');
-    Game.engine.lock();
-    window.removeEventListener('keydown', this);
-  } else {
-    alert('This box is empty. :-(');
-  }
-};
-
-Player.prototype.getX = function () {
-  return this.x;
-};
-
-Player.prototype.getY = function () {
-  return this.y;
-};
-
-const Pedro = function (x, y) {
-  this.x = x;
-  this.y = y;
-  this.draw();
-};
-
-Pedro.prototype.draw = function () {
-  Game.display.draw(this.x, this.y, 'P', '#ec5f67', '#b14956');
-};
-
-Pedro.prototype.act = function () {
-  const [x, y] = [Game.player.getX(), Game.player.getY()];
-
-  const isPassable = function (x, y) {
-    const tileKey = x + ',' + y;
-    return tileKey in Game.map && Game.map[tileKey] !== 1;
-  };
-
-  const astar = new ROT.Path.AStar(x, y, isPassable, { topology: 4 });
-
-  const path = [];
-  const getPath = function (x, y) {
-    path.push([x, y]);
-  };
-  astar.compute(this.x, this.y, getPath);
-  path.shift(); // remove Pedro's position
-  console.log(path);
-
-  if (path.length <= 1) {
-    Game.engine.lock();
-    alert('Game over - you were captured by Pedro!');
-    this.draw();
-  } else {
-    const [x, y] = path[0];
-    Game.display.draw(
-      this.x,
-      this.y,
-      ...Glyphs[Game.map[this.x + ',' + this.y]]
-    );
-    this.x = x;
-    this.y = y;
-    this.draw();
-  }
 };
 
 window.onload = Game.init();
