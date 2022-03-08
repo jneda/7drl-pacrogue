@@ -68,7 +68,9 @@ const Game = {
     this.actors.push(this.createBeing(Player));
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
-    for (let i = 0; i < 3; i++) {
+
+    const monstersNumber = 2;
+    for (let i = 0; i < monstersNumber; i++) {
       const pedro = this.createBeing(Pedro);
       this.actors.push(pedro);
       this.actorKeys.push(this.getActorKey(pedro));
@@ -141,6 +143,10 @@ const Game = {
   updateActorKey(originKey, destinationKey) {
     const actorId = this.actorKeys.indexOf(originKey);
     this.actorKeys[actorId] = destinationKey;
+  },
+
+  hasActor(key) {
+    return this.actorKeys.indexOf(key) !== -1;
   },
 
   toKey(x, y) {

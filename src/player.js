@@ -52,6 +52,9 @@ class Player {
     const tileGlyph = Glyphs[Game.map[tileKey]];
     Game.display.draw(this.x, this.y, ...tileGlyph);
 
+    // // debug: refresh whole map
+    // Game.drawMap();
+
     Game.updateActorKey(tileKey, newKey);
 
     this.x = newX;
