@@ -19,15 +19,14 @@ class Pedro {
   }
 
   act() {
-    const [x, y] = [Game.player.getX(), Game.player.getY()];
-    const isPassable = function (x, y) {
-      const tileKey = Game.toKey(x, y);
+    // // go for the player's position
+    // const [x, y] = [Game.player.getX(), Game.player.getY()];
 
-      const isInBounds = tileKey in Game.map;
-      const isNotWall = Game.map[tileKey] !== 1;
-      return isInBounds && isNotWall;
-    };
+    // go for a tile further up the player's direction of travel
+    const [x, y] = Game.player.getOffsetTarget();
 
+    // set up ROT AStar pathfinding
+    const isPassable = Game.isPassable;
     const astar = new ROT.Path.AStar(x, y, isPassable, { topology: 4 });
     // console.dir(astar);
     const path = [];
@@ -36,16 +35,16 @@ class Pedro {
 
       //   // DEBUG: display path
       //   console.log('drawing tile');
-      //   Game.display.drawOver(x, y, null, null, '#88e985');
+        Game.display.drawOver(x, y, null, null, '#88e985');
     };
     astar.compute(this.x, this.y, getPath);
     path.shift(); // remove Pedro's position
     // console.log(path);
 
     if (path.length < 2) {
-      Game.engine.lock();
-      this.draw();
-      alert('Game over - you were captured by Pedro!');
+      // Game.engine.lock();
+      // this.draw();
+      // alert('Game over - you were captured by Pedro!');
     } else {
       const [x, y] = path[0];
       const destinationKey = Game.toKey(x, y);

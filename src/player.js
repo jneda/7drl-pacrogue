@@ -2,6 +2,7 @@ class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
+    this.direction = null;
     this.glyph = ['@', '#fdc253', '#15171c'];
     this.draw();
   }
@@ -39,7 +40,8 @@ class Player {
       return;
     }
 
-    const [dx, dy] = ROT.DIRS[8][keyMap[code]];
+    const direction = ROT.DIRS[8][keyMap[code]];
+    const [dx, dy] = direction;
     const newX = this.x + dx;
     const newY = this.y + dy;
     const newKey = newX + ',' + newY;
@@ -56,6 +58,8 @@ class Player {
     // Game.drawMap();
 
     Game.updateActorKey(tileKey, newKey);
+
+    this.direction = direction;
 
     this.x = newX;
     this.y = newY;
@@ -83,5 +87,37 @@ class Player {
 
   getY() {
     return this.y;
+  }
+
+  getDirection() {
+    return this.direction;
+  }
+
+  getOffsetTarget() {
+    // debug: draw direction with offset
+    let offset = 4;
+    let [targetX, targetY] = [0, 0];
+    const [dx, dy] = this.direction;
+    while (!Game.isPassable(targetX, targetY)) {
+      targetX = this.x + dx * offset;
+      targetY = this.y + dy * offset;
+      // console.log([dx * offset, dy * offset]);
+      offset--;
+    }
+    // debug: display offset target marker
+    // console.log(
+    //   'marker at ' + (this.x + dx * offset) + ',' + (this.y + dy * offset)
+    // );
+    Game.drawMap();
+    Game.display.draw(
+      this.x + dx * offset,
+      this.y + dy * offset,
+      '',
+      null,
+      '#fdc253'
+    );
+    this.draw();
+
+    return [targetX, targetY];
   }
 }

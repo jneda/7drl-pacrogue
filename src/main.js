@@ -69,12 +69,20 @@ const Game = {
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
 
-    const monstersNumber = 2;
+    const monstersNumber = 1;
     for (let i = 0; i < monstersNumber; i++) {
       const pedro = this.createBeing(Pedro);
       this.actors.push(pedro);
       this.actorKeys.push(this.getActorKey(pedro));
     }
+  },
+
+  isPassable(x, y) {
+    const tileKey = Game.toKey(x, y);
+
+    const isInBounds = tileKey in Game.map;
+    const isNotWall = Game.map[tileKey] !== 1;
+    return isInBounds && isNotWall;
   },
 
   isOuterRing(x, y) {
