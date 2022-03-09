@@ -44,12 +44,13 @@ class Player {
     const [dx, dy] = direction;
     const newX = this.x + dx;
     const newY = this.y + dy;
-    const newKey = newX + ',' + newY;
+    const newKey = Game.toKey(newX, newY);
 
     if (!(newKey in Game.map) || Game.map[newKey] === 1) {
       return;
     }
 
+    // restore the empty tile display
     const tileKey = Game.toKey(this.x, this.y);
     const tileGlyph = Glyphs[Game.map[tileKey]];
     Game.display.draw(this.x, this.y, ...tileGlyph);
