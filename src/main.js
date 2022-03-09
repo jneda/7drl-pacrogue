@@ -1,6 +1,6 @@
 const displayConfig = {
-  width: 21,
-  height: 21,
+  width: 27,
+  height: 31,
   fontFamily: 'VGA',
   fontSize: 16,
   forceSquareRatio: true,
@@ -41,28 +41,48 @@ const Game = {
   },
 
   generateMap: function () {
-    const digger = new ROT.Map.IceyMaze(
-      displayConfig.width,
-      displayConfig.height
-    );
+    const quarterMazeConfig = {
+      width: Math.ceil(displayConfig.width / 2),
+      height: Math.ceil(displayConfig.height / 2),
+    };
 
-    digger.create(
-      function (x, y, value) {
-        // carve out the outer ring
-        if (this.isOuterRing(x, y) || this.isInnerRing(x, y)) {
-          value = 0;
-        }
-        const key = this.toKey(x, y);
-        if (!value) {
-          this.freeCells.push(key);
-        }
-        this.map[key] = value;
-      }.bind(this)
-    ); // necessary to ensure the callback is called within a correct context
+    const maze = this.makeMaze(quarterMazeConfig);
+    this.spreadRooms(maze, quarterMazeConfig);
+
+    this.map = maze.map;
+    this.freeCells = maze.freeCells;
+
+    const flippedMazeH = this.flipMaze(maze, quarterMazeConfig, true);
+    this.stitchMaze(flippedMazeH, quarterMazeConfig, true);
+
+    const flippedMazeV = this.flipMaze(maze, quarterMazeConfig, false, true);
+    this.stitchMaze(flippedMazeV, quarterMazeConfig, false, true);
+
+    const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
+    this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
+
+    // const digger = new ROT.Map.IceyMaze(
+    //   quarterMaze.width,
+    //   quarterMaze.height
+    // );
+
+    // digger.create(
+    //   function (x, y, value) {
+    //     // carve out the outer ring
+    //     if (this.isOuterRing(x, y, quarterMaze) || this.isInnerRing(x, y, quarterMaze)) {
+    //       value = 0;
+    //     }
+    //     const key = this.toKey(x, y);
+    //     if (!value) {
+    //       this.freeCells.push(key);
+    //     }
+    //     this.map[key] = value;
+    //   }.bind(this)
+    // ); // necessary to ensure the callback is called within a correct context
 
     // this.spreadRooms();
 
-    this.generateGoodies();
+    // this.generateGoodies();
     this.drawMap();
 
     this.actors.push(this.createBeing(Player));
@@ -78,6 +98,91 @@ const Game = {
     }
   },
 
+  makeMaze(mazeConfig) {
+    const maze = {
+      map: {},
+      freeCells: [],
+    };
+    const digger = new ROT.Map.IceyMaze(mazeConfig.width + 2, mazeConfig.height + 2, 1);
+    digger.create(function (x, y, value) {
+      // // carve out the outer ring
+      // if (
+      //   Game.isOuterRing(x, y, mazeConfig)
+      // ) {
+      //   value = 0;
+      // }
+
+      // // carve out the inner ring
+      // if (
+      //   Game.isInnerRing(x, y, mazeConfig)
+      // ) {
+      //   value = 0;
+      // }
+
+      const key = Game.toKey(x, y);
+      if (!value) {
+        maze.freeCells.push(key);
+      }
+      maze.map[key] = value;
+    });
+    console.dir(maze);
+    return maze;
+  },
+
+  flipMaze(maze, mazeConfig, horizontal = false, vertical = false) {
+    if (!horizontal && !vertical) {
+      throw 'Flipping axis not defined.';
+    }
+    const flippedMaze = {
+      map: {},
+      freeCells: [],
+    };
+    for (let i = 0; i < mazeConfig.height; i++) {
+      for (let j = 0; j < mazeConfig.width; j++) {
+        const tileKey = Game.toKey(j, i);
+        let [fetchX, fetchY] = [j, i];
+        if (horizontal) {
+          fetchX = mazeConfig.width - 1 - j;
+        }
+        if (vertical) {
+          fetchY = mazeConfig.height - 1 - i;
+        }
+        const fetchKey = Game.toKey(fetchX, fetchY);
+        const fetchedTile = maze.map[fetchKey];
+        flippedMaze.map[tileKey] = fetchedTile;
+        if (fetchedTile === 0) {
+          flippedMaze.freeCells.push(tileKey);
+        }
+      }
+    }
+
+    return flippedMaze;
+  },
+
+  stitchMaze(maze, mazeConfig, horizontal = false, vertical = false) {
+    if (!horizontal && !vertical) {
+      throw 'Stitching axis not defined.';
+    }
+    for (let i = 0; i < mazeConfig.height; i++) {
+      for (let j = 0; j < mazeConfig.width; j++) {
+        const tileKey = Game.toKey(j, i);
+        let [stitchX, stitchY] = [j, i];
+        if (horizontal) {
+          stitchX = mazeConfig.width - 1 + j;
+        }
+        if (vertical) {
+          stitchY = mazeConfig.height - 1 + i;
+        }
+        const stitchKey = Game.toKey(stitchX, stitchY);
+        const mazeTile = maze.map[tileKey];
+        this.map[stitchKey] = mazeTile;
+        if (mazeTile === 0) {
+          this.freeCells.push(stitchKey);
+        }
+      }
+    }
+  },
+
   isPassable(x, y) {
     const tileKey = Game.toKey(x, y);
 
@@ -86,20 +191,16 @@ const Game = {
     return isInBounds && isNotWall;
   },
 
-  isOuterRing(x, y) {
+  isOuterRing(x, y, maze) {
     return (
-      ((x === 1 || x === displayConfig.width - 2) &&
-        y > 0 &&
-        y < displayConfig.height - 1) ||
-      ((y === 1 || y === displayConfig.height - 2) &&
-        x > 0 &&
-        x < displayConfig.width - 1)
+      ((x === 1 || x === maze.width - 2) && y > 0 && y < maze.height - 1) ||
+      ((y === 1 || y === maze.height - 2) && x > 0 && x < maze.width - 1)
     );
   },
 
-  isInnerRing(x, y) {
-    const midpointX = Math.floor(displayConfig.width / 2);
-    const midpointY = Math.floor(displayConfig.height / 2);
+  isInnerRing(x, y, maze) {
+    const midpointX = Math.floor(maze.width / 2);
+    const midpointY = Math.floor(maze.height / 2);
     const halfSize = 3;
     const lowXBound = midpointX - halfSize;
     const highXBound = midpointX + halfSize;
@@ -115,10 +216,10 @@ const Game = {
     );
   },
 
-  spreadRooms() {
+  spreadRooms(maze, mazeConfig) {
     const digger2 = new ROT.Map.Uniform(
-      displayConfig.width,
-      displayConfig.height,
+      mazeConfig.width,
+      mazeConfig.height,
       {
         roomWidth: [3, 3],
         roomHeight: [3, 3],
@@ -134,9 +235,9 @@ const Game = {
       for (let i = room.getTop(); i <= room.getBottom(); i++) {
         for (let j = room.getLeft(); j <= room.getRight(); j++) {
           const key = this.toKey(j, i);
-          if (this.map[key] === 1) {
-            this.freeCells.push(key);
-            this.map[key] = 0;
+          if (maze.map[key] === 1) {
+            maze.freeCells.push(key);
+            maze.map[key] = 0;
           }
         }
       }
