@@ -46,7 +46,10 @@ const Game = {
       height: Math.ceil(displayConfig.height / 2),
     };
 
+    // generate top left quadrant
     const maze = this.makeMaze(quarterMazeConfig);
+
+    // add some rooms ?
     this.spreadRooms(maze, quarterMazeConfig);
 
     this.map = maze.map;
@@ -61,6 +64,12 @@ const Game = {
     const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
     this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
 
+    const mapConfig = {
+      width: displayConfig.width,
+      height: displayConfig.height,
+    };
+
+    this.carveOuterRing(mapConfig);
     // const digger = new ROT.Map.IceyMaze(
     //   quarterMaze.width,
     //   quarterMaze.height
@@ -90,7 +99,7 @@ const Game = {
     this.actorKeys.push(this.getActorKey(this.player));
 
     const monstersNumber = 2;
-    const monsters = [Blinky, Pinky]
+    const monsters = [Blinky, Pinky];
     for (let i = 0; i < monstersNumber; i++) {
       const enemy = this.createBeing(monsters[i]);
       this.actors.push(enemy);
@@ -103,7 +112,11 @@ const Game = {
       map: {},
       freeCells: [],
     };
-    const digger = new ROT.Map.IceyMaze(mazeConfig.width + 2, mazeConfig.height + 2, 1);
+    const digger = new ROT.Map.IceyMaze(
+      mazeConfig.width + 2,
+      mazeConfig.height + 2,
+      1
+    );
     digger.create(function (x, y, value) {
       // // carve out the outer ring
       // if (
@@ -125,7 +138,7 @@ const Game = {
       }
       maze.map[key] = value;
     });
-    console.dir(maze);
+    // console.dir(maze);
     return maze;
   },
 
@@ -183,6 +196,18 @@ const Game = {
     }
   },
 
+  carveOuterRing(mapConfig) {
+    for (let i = 1; i < mapConfig.height - 1; i++) {
+      for (let j = 1; j < mapConfig.width - 1; j++) {
+        if (this.isOuterRing(j, i, mapConfig)) {
+          const key = this.toKey(j, i);
+          this.map[key] = 0;
+          this.freeCells.push(key);
+        }
+      }
+    }
+  },
+
   isPassable(x, y) {
     const tileKey = Game.toKey(x, y);
 
@@ -191,16 +216,20 @@ const Game = {
     return isInBounds && isNotWall;
   },
 
-  isOuterRing(x, y, maze) {
+  isOuterRing(x, y, mazeConfig) {
     return (
-      ((x === 1 || x === maze.width - 2) && y > 0 && y < maze.height - 1) ||
-      ((y === 1 || y === maze.height - 2) && x > 0 && x < maze.width - 1)
+      ((x === 1 || x === mazeConfig.width - 2) &&
+        y > 0 &&
+        y < mazeConfig.height - 1) ||
+      ((y === 1 || y === mazeConfig.height - 2) &&
+        x > 0 &&
+        x < mazeConfig.width - 1)
     );
   },
 
-  isInnerRing(x, y, maze) {
-    const midpointX = Math.floor(maze.width / 2);
-    const midpointY = Math.floor(maze.height / 2);
+  isInnerRing(x, y, mazeConfig) {
+    const midpointX = Math.floor(mazeConfig.width / 2);
+    const midpointY = Math.floor(mazeConfig.height / 2);
     const halfSize = 3;
     const lowXBound = midpointX - halfSize;
     const highXBound = midpointX + halfSize;
@@ -217,15 +246,11 @@ const Game = {
   },
 
   spreadRooms(maze, mazeConfig) {
-    const digger2 = new ROT.Map.Uniform(
-      mazeConfig.width,
-      mazeConfig.height,
-      {
-        roomWidth: [3, 3],
-        roomHeight: [3, 3],
-        roomDugPercentage: 0.3,
-      }
-    );
+    const digger2 = new ROT.Map.Uniform(mazeConfig.width, mazeConfig.height, {
+      roomWidth: [3, 3],
+      roomHeight: [3, 3],
+      roomDugPercentage: 0.1,
+    });
 
     digger2.create();
 
