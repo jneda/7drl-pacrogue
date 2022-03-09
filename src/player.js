@@ -109,15 +109,15 @@ class Player {
     // console.log(
     //   'marker at ' + (this.x + dx * offset) + ',' + (this.y + dy * offset)
     // );
-    Game.drawMap();
-    Game.display.draw(
-      this.x + dx * offset,
-      this.y + dy * offset,
-      '',
-      null,
-      '#fdc253'
-    );
-    this.draw();
+    // Game.drawMap();
+    // Game.display.draw(
+    //   this.x + dx * offset,
+    //   this.y + dy * offset,
+    //   '',
+    //   null,
+    //   '#fdc253'
+    // );
+    // this.draw();
 
     return [targetX, targetY];
   }

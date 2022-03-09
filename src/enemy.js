@@ -1,10 +1,10 @@
-class Pedro {
+class Enemy {
   constructor(x, y) {
     this.x = x;
     this.y = y;
     this.direction = null;
     this.glyph = ['\u03a9', '#ec5f67', '#15171c'];
-    this.draw();
+    // this.draw();
   }
 
   getX() {
@@ -23,8 +23,9 @@ class Pedro {
     // // go for the player's position
     // const [x, y] = [Game.player.getX(), Game.player.getY()];
 
-    // go for a tile further up the player's direction of travel
-    const [x, y] = Game.player.getOffsetTarget();
+    // // go for a tile further up the player's direction of travel
+    // const [x, y] = Game.player.getOffsetTarget();
+    const [x, y] = this.setTarget();
 
     // set up ROT AStar pathfinding
     const isPassable = function (x, y) {
@@ -46,7 +47,7 @@ class Pedro {
 
       //   // DEBUG: display path
       //   console.log('drawing tile');
-      Game.display.drawOver(x, y, null, null, '#88e985');
+      // Game.display.drawOver(x, y, null, null, '#88e985');
     };
     astar.compute(this.x, this.y, getPath);
     path.shift(); // remove Pedro's position
@@ -83,6 +84,8 @@ class Pedro {
       this.x = x;
       this.y = y;
       this.draw();
+      // debug
+      console.log(this.name + ' has moved');
     }
   }
 
@@ -101,5 +104,35 @@ class Pedro {
       y: this.y - dy,
     };
     return tileBehind;
+  }
+
+  setTarget() {}
+}
+
+class Blinky extends Enemy {
+  constructor(x, y) {
+    super(x, y);
+    this.glyph = ['\u03a9', '#ec5f67', '#15171c'];
+    this.name = 'Blinky';
+    this.draw();
+  }
+
+  setTarget() {
+    const [x, y] = [Game.player.getX(), Game.player.getY()];
+    return [x, y];
+  }
+}
+
+class Pinky extends Enemy {
+  constructor(x, y) {
+    super(x, y);
+    this.glyph = ['\u03a9', '#bf83c0', '#15171c'];
+    this.name = 'Pinky';
+    this.draw();
+  }
+
+  setTarget() {
+    const [x, y] = Game.player.getOffsetTarget();
+    return [x, y];
   }
 }

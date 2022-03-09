@@ -69,11 +69,12 @@ const Game = {
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
 
-    const monstersNumber = 1;
+    const monstersNumber = 2;
+    const monsters = [Blinky, Pinky]
     for (let i = 0; i < monstersNumber; i++) {
-      const pedro = this.createBeing(Pedro);
-      this.actors.push(pedro);
-      this.actorKeys.push(this.getActorKey(pedro));
+      const enemy = this.createBeing(monsters[i]);
+      this.actors.push(enemy);
+      this.actorKeys.push(this.getActorKey(enemy));
     }
   },
 
