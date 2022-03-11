@@ -10,12 +10,14 @@ const Glyphs = {
   0: ['', '#b2b8c2', '#15171c'],
   1: ['', '#ffffff', '#b2b8c2'],
   2: ['¤', '#58c2c0', '#15171c'],
+  3: ['.', '#58c2c0', null],
 };
 
 const Game = {
   display: null,
   map: {},
   freeCells: [],
+  pellets: [],
   engine: null,
   player: null,
   actors: [],
@@ -29,7 +31,7 @@ const Game = {
 
     // generate the map
     const mapGenerator = new MapGenerator(mapConfig);
-    [this.map, this.freeCells] = mapGenerator.init();
+    [this.map, this.freeCells, this.pellets] = mapGenerator.init();
     // console.dir(this.map);
 
     this.generateGoodies();
@@ -119,6 +121,10 @@ const Game = {
       const [x, y] = this.toCoords(key);
       const glyph = Glyphs[this.map[key]];
       this.display.draw(x, y, ...glyph);
+
+      if (this.pellets.indexOf(key) !== -1) {
+        this.display.drawOver(x, y, ...Glyphs['3']);
+      }
     }
   },
 };

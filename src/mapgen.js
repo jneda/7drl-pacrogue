@@ -9,6 +9,7 @@ class MapGenerator {
     this.mapHeight = mapConfig.height;
     this.map = {};
     this.freeCells = [];
+    this.pellets = [];
   }
 
   init() {
@@ -26,17 +27,18 @@ class MapGenerator {
     this.map = maze.map;
     this.freeCells = maze.freeCells;
 
-    // mirror and paste the maze onto other quadrants
-    const flippedMazeH = this.flipMaze(maze, quarterMazeConfig, true);
-    this.stitchMaze(flippedMazeH, quarterMazeConfig, true);
+    // // mirror and paste the maze onto other quadrants
+    // const flippedMazeH = this.flipMaze(maze, quarterMazeConfig, true);
+    // this.stitchMaze(flippedMazeH, quarterMazeConfig, true);
 
-    const flippedMazeV = this.flipMaze(maze, quarterMazeConfig, false, true);
-    this.stitchMaze(flippedMazeV, quarterMazeConfig, false, true);
+    // const flippedMazeV = this.flipMaze(maze, quarterMazeConfig, false, true);
+    // this.stitchMaze(flippedMazeV, quarterMazeConfig, false, true);
 
-    const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
-    this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
+    // const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
+    // this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
 
-    this.carveOuterRing(mapConfig);
+    // this.carveOuterRing(mapConfig);
+
     // const digger = new ROT.Map.IceyMaze(
     //   quarterMaze.width,
     //   quarterMaze.height
@@ -58,7 +60,12 @@ class MapGenerator {
 
     // this.spreadRooms();
 
-    return [this.map, this.freeCells];
+    // put pellets
+    for (let i = 0; i < this.freeCells.length; i++) {
+      this.pellets[i] = this.freeCells[i];
+    }
+
+    return [this.map, this.freeCells, this.pellets];
   }
 
   makeMaze(mazeConfig) {
@@ -119,7 +126,7 @@ class MapGenerator {
               consecutiveWalls = 0;
               // dig out the fourth wall
               maze.map[Game.toKey(j, i)] = 0;
-              maze.freeCells.push([Game.toKey(j, i)]);
+              maze.freeCells.push(Game.toKey(j, i));
               // make the following tile a wall to prevent from having to big a gap
               maze.map[Game.toKey(j + 1, i)] = 1;
               maze.freeCells.splice(
@@ -128,12 +135,11 @@ class MapGenerator {
               );
               // if the tile below is a wall, dig it out
               // to prevent from having a diagonal hole
-              if (maze.map[Game.toKey(j, i + 1)] === 0) {
+              if (maze.map[Game.toKey(j, i + 1)] === 1) {
                 maze.map[Game.toKey(j, i + 1)] = 0;
-                maze.freeCells.splice(
-                  maze.freeCells.indexOf(Game.toKey(j, i + 1)),
-                  1
-                );
+                if (maze.freeCells.indexOf(Game.toKey(j, i + 1)) === -1) {
+                  maze.freeCells.push(Game.toKey(j, i + 1));
+                }
               }
             }
           }
@@ -164,7 +170,7 @@ class MapGenerator {
               consecutiveWalls = 0;
 
               maze.map[Game.toKey(j, i)] = 0;
-              maze.freeCells.push([Game.toKey(j, i)]);
+              maze.freeCells.push(Game.toKey(j, i));
 
               maze.map[Game.toKey(j, i + 1)] = 1;
               maze.freeCells.splice(
@@ -172,12 +178,11 @@ class MapGenerator {
                 1
               );
 
-              if (maze.map[Game.toKey(j + 1, i)] === 0) {
+              if (maze.map[Game.toKey(j + 1, i)] === 1) {
                 maze.map[Game.toKey(j + 1, i)] = 0;
-                maze.freeCells.splice(
-                  maze.freeCells.indexOf(Game.toKey(j + 1, i)),
-                  1
-                );
+                if (maze.freeCells.indexOf(Game.toKey(j+ 1, i)) === -1) {
+                  maze.freeCells.push(Game.toKey(j + 1, i));
+                }
               }
             }
           }
