@@ -85,7 +85,7 @@ class Enemy {
       this.y = y;
       this.draw();
       // debug
-      console.log(this.name + ' has moved');
+      // console.log(this.name + ' has moved');
     }
   }
 
