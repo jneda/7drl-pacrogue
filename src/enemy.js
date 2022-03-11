@@ -3,7 +3,7 @@ class Enemy {
     this.x = x;
     this.y = y;
     this.direction = null;
-    this.glyph = ['\u03a9', '#ec5f67', '#15171c'];
+    this.glyph = ['\u03a9', '#ec5f67', null];
     // this.draw();
   }
 
@@ -73,12 +73,13 @@ class Enemy {
       // setTimeout(function () {}, 1000);
 
       // restore the display of the origin tile
-      const originKey = Game.toKey(this.x, this.y);
-      const tileGlyph = Glyphs[Game.map[originKey]];
-      Game.display.draw(this.x, this.y, ...tileGlyph);
+      Game.drawMapAt(this.x, this.y);
+      // const tileGlyph = Glyphs[Game.map[originKey]];
+      // Game.display.draw(this.x, this.y, ...tileGlyph);
 
       // update position and display of the enemy
       this.computeDirection(x, y);
+      const originKey = Game.toKey(this.x, this.y);
       Game.updateActorKey(originKey, destinationKey);
 
       this.x = x;

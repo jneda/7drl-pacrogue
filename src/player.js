@@ -50,15 +50,22 @@ class Player {
       return;
     }
 
+    if (Game.pellets.indexOf(newKey) !== -1) {
+      Game.pellets.splice(Game.pellets.indexOf(newKey), 1);
+      Game.score++;
+      console.log('score: ', Game.score);
+    }
+
     // restore the empty tile display
-    const tileKey = Game.toKey(this.x, this.y);
-    const tileGlyph = Glyphs[Game.map[tileKey]];
-    Game.display.draw(this.x, this.y, ...tileGlyph);
+    Game.drawMapAt(this.x, this.y);
+    // const tileKey = Game.toKey(this.x, this.y);
+    // const tileGlyph = Glyphs[Game.map[tileKey]];
+    // Game.display.draw(this.x, this.y, ...tileGlyph);
 
     // // debug: refresh whole map
     // Game.drawMap();
 
-    Game.updateActorKey(tileKey, newKey);
+    Game.updateActorKey(Game.toKey(this.x, this.y), newKey);
 
     this.direction = direction;
 

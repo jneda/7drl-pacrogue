@@ -23,8 +23,9 @@ const Game = {
   actors: [],
   actorKeys: [],
   ananas: null,
+  score: 0,
 
-  init: function () {
+  init() {
     // create and store ROT console
     this.display = new ROT.Display(displayConfig);
     document.getElementById('canvas').appendChild(this.display.getContainer());
@@ -34,7 +35,7 @@ const Game = {
     [this.map, this.freeCells, this.pellets] = mapGenerator.init();
     // console.dir(this.map);
 
-    this.generateGoodies();
+    // this.generateGoodies();
     this.drawMap();
 
     this.actors.push(this.createBeing(Player));
@@ -42,7 +43,7 @@ const Game = {
     this.actorKeys.push(this.getActorKey(this.player));
 
     const monstersNumber = 2;
-    const monsters = [Blinky, Pinky];
+    const monsters = [Blinky, Pinky, Blinky, Pinky];
     for (let i = 0; i < monstersNumber; i++) {
       const enemy = this.createBeing(monsters[i]);
       this.actors.push(enemy);
@@ -56,6 +57,8 @@ const Game = {
     }
     this.engine = new ROT.Engine(scheduler);
     this.engine.start();
+
+    this.score = 0;
   },
 
   isPassable(x, y) {
@@ -92,7 +95,7 @@ const Game = {
     return [x, y];
   },
 
-  generateGoodies: function () {
+  generateGoodies() {
     const nbGoodies = 10;
     for (let i = 0; i < nbGoodies; i++) {
       const key = this.getRandomFreeCellKey();
@@ -104,7 +107,7 @@ const Game = {
     }
   },
 
-  createBeing: function (what) {
+  createBeing(what) {
     const key = this.getRandomFreeCellKey();
     const [x, y] = this.toCoords(key);
     return new what(x, y);
@@ -116,7 +119,7 @@ const Game = {
     return key;
   },
 
-  drawMap: function () {
+  drawMap() {
     for (const key in this.map) {
       const [x, y] = this.toCoords(key);
       const glyph = Glyphs[this.map[key]];
@@ -125,6 +128,16 @@ const Game = {
       if (this.pellets.indexOf(key) !== -1) {
         this.display.drawOver(x, y, ...Glyphs['3']);
       }
+    }
+  },
+
+  drawMapAt(x, y) {
+    const tileKey = this.toKey(x, y);
+    const glyph = Glyphs[this.map[tileKey]];
+    this.display.draw(x, y, ...glyph);
+
+    if (this.pellets.indexOf(tileKey) !== -1) {
+      this.display.drawOver(x, y, ...Glyphs['3']);
     }
   },
 };

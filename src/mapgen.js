@@ -25,19 +25,18 @@ class MapGenerator {
     // this.spreadRooms(maze, quarterMazeConfig);
 
     this.map = maze.map;
-    this.freeCells = maze.freeCells;
 
-    // // mirror and paste the maze onto other quadrants
-    // const flippedMazeH = this.flipMaze(maze, quarterMazeConfig, true);
-    // this.stitchMaze(flippedMazeH, quarterMazeConfig, true);
+    // mirror and paste the maze onto other quadrants
+    const flippedMazeH = this.flipMaze(maze, quarterMazeConfig, true);
+    this.stitchMaze(flippedMazeH, quarterMazeConfig, true);
 
-    // const flippedMazeV = this.flipMaze(maze, quarterMazeConfig, false, true);
-    // this.stitchMaze(flippedMazeV, quarterMazeConfig, false, true);
+    const flippedMazeV = this.flipMaze(maze, quarterMazeConfig, false, true);
+    this.stitchMaze(flippedMazeV, quarterMazeConfig, false, true);
 
-    // const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
-    // this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
+    const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
+    this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
 
-    // this.carveOuterRing(mapConfig);
+    this.carveOuterRing(mapConfig);
 
     // const digger = new ROT.Map.IceyMaze(
     //   quarterMaze.width,
@@ -60,6 +59,13 @@ class MapGenerator {
 
     // this.spreadRooms();
 
+    // get free cells
+    for (const key in this.map) {
+      if (this.map[key] === 0) {
+        this.freeCells.push(key);
+      }
+    }
+
     // put pellets
     for (let i = 0; i < this.freeCells.length; i++) {
       this.pellets[i] = this.freeCells[i];
@@ -78,32 +84,40 @@ class MapGenerator {
       mazeConfig.height + 2,
       1
     );
-    digger.create(
-      function (x, y, value) {
-        // // carve out the outer ring
-        // if (
-        //   this.isOuterRing(x, y, mazeConfig)
-        // ) {
-        //   value = 0;
-        // }
+    digger.create(function (x, y, value) {
+      // // carve out the outer ring
+      // if (
+      //   this.isOuterRing(x, y, mazeConfig)
+      // ) {
+      //   value = 0;
+      // }
 
-        // // carve out the inner ring
-        // if (
-        //   this.isInnerRing(x, y, mazeConfig)
-        // ) {
-        //   value = 0;
-        // }
+      // // carve out the inner ring
+      // if (
+      //   this.isInnerRing(x, y, mazeConfig)
+      // ) {
+      //   value = 0;
+      // }
 
-        const key = Game.toKey(x, y);
-        if (!value) {
-          maze.freeCells.push(key);
-        }
-        maze.map[key] = value;
-      }.bind(this)
-    );
+      const key = Game.toKey(x, y);
+      maze.map[key] = value;
+    });
     // console.log(maze.map);
+
+    maze.map = this.checkRowsForLongWalls(maze.map, mazeConfig);
+
+    maze.map = this.checkColumnsForLongWalls(maze.map, mazeConfig);
+
+    // console.log(maze.map);
+
+    // console.dir(maze);
+    return maze;
+  }
+
+  checkRowsForLongWalls(mazemap, mazeConfig) {
     // punch holes into decidedly too long walls
     // check each row for long walls
+    console.log(mazemap);
     for (let i = 0; i < mazeConfig.height + 2; i++) {
       let consecutiveWalls = 0;
       for (let j = 0; j < mazeConfig.width + 2; j++) {
@@ -116,7 +130,7 @@ class MapGenerator {
           //   ' : ',
           //   maze.map[Game.toKey(j, i)]
           // );
-          if (maze.map[Game.toKey(j, i)] === 0) {
+          if (mazemap[Game.toKey(j, i)] === 0) {
             consecutiveWalls = 0;
           } else {
             // console.log('found wall');
@@ -125,21 +139,13 @@ class MapGenerator {
               // console.log('found 4th consecutive wall');
               consecutiveWalls = 0;
               // dig out the fourth wall
-              maze.map[Game.toKey(j, i)] = 0;
-              maze.freeCells.push(Game.toKey(j, i));
+              mazemap[Game.toKey(j, i)] = 0;
               // make the following tile a wall to prevent from having to big a gap
-              maze.map[Game.toKey(j + 1, i)] = 1;
-              maze.freeCells.splice(
-                maze.freeCells.indexOf(Game.toKey(j + 1, i)),
-                1
-              );
+              mazemap[Game.toKey(j + 1, i)] = 1;
               // if the tile below is a wall, dig it out
               // to prevent from having a diagonal hole
-              if (maze.map[Game.toKey(j, i + 1)] === 1) {
-                maze.map[Game.toKey(j, i + 1)] = 0;
-                if (maze.freeCells.indexOf(Game.toKey(j, i + 1)) === -1) {
-                  maze.freeCells.push(Game.toKey(j, i + 1));
-                }
+              if (mazemap[Game.toKey(j, i + 1)] === 1) {
+                mazemap[Game.toKey(j, i + 1)] = 0;
               }
             }
           }
@@ -147,6 +153,10 @@ class MapGenerator {
       }
     }
 
+    return mazemap;
+  }
+
+  checkColumnsForLongWalls(mazemap, mazeConfig) {
     // check each column for long walls
     for (let j = 0; j < mazeConfig.width + 2; j++) {
       let consecutiveWalls = 0;
@@ -160,7 +170,7 @@ class MapGenerator {
           //   ' : ',
           //   maze.map[Game.toKey(j, i)]
           // );
-          if (maze.map[Game.toKey(j, i)] === 0) {
+          if (mazemap[Game.toKey(j, i)] === 0) {
             consecutiveWalls = 0;
           } else {
             // console.log('found wall');
@@ -169,31 +179,19 @@ class MapGenerator {
               // console.log('found 4th consecutive wall');
               consecutiveWalls = 0;
 
-              maze.map[Game.toKey(j, i)] = 0;
-              maze.freeCells.push(Game.toKey(j, i));
+              mazemap[Game.toKey(j, i)] = 0;
 
-              maze.map[Game.toKey(j, i + 1)] = 1;
-              maze.freeCells.splice(
-                maze.freeCells.indexOf(Game.toKey(j, i + 1)),
-                1
-              );
+              mazemap[Game.toKey(j, i + 1)] = 1;
 
-              if (maze.map[Game.toKey(j + 1, i)] === 1) {
-                maze.map[Game.toKey(j + 1, i)] = 0;
-                if (maze.freeCells.indexOf(Game.toKey(j+ 1, i)) === -1) {
-                  maze.freeCells.push(Game.toKey(j + 1, i));
-                }
+              if (mazemap[Game.toKey(j + 1, i)] === 1) {
+                mazemap[Game.toKey(j + 1, i)] = 0;
               }
             }
           }
         }
       }
     }
-
-    // console.log(maze.map);
-
-    // console.dir(maze);
-    return maze;
+    return mazemap;
   }
 
   flipMaze(maze, mazeConfig, horizontal = false, vertical = false) {
@@ -202,7 +200,6 @@ class MapGenerator {
     }
     const flippedMaze = {
       map: {},
-      freeCells: [],
     };
     for (let i = 0; i < mazeConfig.height; i++) {
       for (let j = 0; j < mazeConfig.width; j++) {
@@ -217,9 +214,6 @@ class MapGenerator {
         const fetchKey = Game.toKey(fetchX, fetchY);
         const fetchedTile = maze.map[fetchKey];
         flippedMaze.map[tileKey] = fetchedTile;
-        if (fetchedTile === 0) {
-          flippedMaze.freeCells.push(tileKey);
-        }
       }
     }
 
@@ -243,9 +237,6 @@ class MapGenerator {
         const stitchKey = Game.toKey(stitchX, stitchY);
         const mazeTile = maze.map[tileKey];
         this.map[stitchKey] = mazeTile;
-        if (mazeTile === 0) {
-          this.freeCells.push(stitchKey);
-        }
       }
     }
   }
@@ -256,7 +247,6 @@ class MapGenerator {
         if (this.isOuterRing(j, i, mapConfig)) {
           const key = Game.toKey(j, i);
           this.map[key] = 0;
-          this.freeCells.push(key);
         }
       }
     }
