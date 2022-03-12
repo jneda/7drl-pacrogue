@@ -17,6 +17,8 @@ const Game = {
   display: null,
   map: {},
   freeCells: [],
+  monsterPenCells: [],
+  playerAreaCells: [],
   pellets: [],
   engine: null,
   player: null,
@@ -32,20 +34,26 @@ const Game = {
 
     // generate the map
     const mapGenerator = new MapGenerator(mapConfig);
-    [this.map, this.freeCells, this.pellets] = mapGenerator.init();
+    [
+      this.map,
+      this.freeCells,
+      this.pellets,
+      this.monsterPenCells,
+      this.playerAreaCells,
+    ] = mapGenerator.init();
     // console.dir(this.map);
 
     // this.generateGoodies();
     this.drawMap();
 
-    this.actors.push(this.createBeing(Player));
+    this.actors.push(this.createBeing(this.playerAreaCells, Player));
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
 
     const monstersNumber = 2;
     const monsters = [Blinky, Pinky, Blinky, Pinky];
     for (let i = 0; i < monstersNumber; i++) {
-      const enemy = this.createBeing(monsters[i]);
+      const enemy = this.createBeing(this.monsterPenCells, monsters[i]);
       this.actors.push(enemy);
       this.actorKeys.push(this.getActorKey(enemy));
     }
@@ -107,15 +115,15 @@ const Game = {
     }
   },
 
-  createBeing(what) {
-    const key = this.getRandomFreeCellKey();
+  createBeing(positions, what) {
+    const key = this.getRandomFreeCellKey(positions);
     const [x, y] = this.toCoords(key);
     return new what(x, y);
   },
 
-  getRandomFreeCellKey() {
-    const index = Math.floor(ROT.RNG.getUniform() * this.freeCells.length);
-    const [key] = this.freeCells.splice(index, 1);
+  getRandomFreeCellKey(positions) {
+    const index = Math.floor(ROT.RNG.getUniform() * positions.length);
+    const [key] = positions.splice(index, 1);
     return key;
   },
 

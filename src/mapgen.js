@@ -1,6 +1,6 @@
 const mapConfig = {
-  width: 21,
-  height: 27,
+  width: 17,
+  height: 23,
 };
 
 class MapGenerator {
@@ -9,6 +9,8 @@ class MapGenerator {
     this.mapHeight = mapConfig.height;
     this.map = {};
     this.freeCells = [];
+    this.monsterPenCells = [];
+    this.playerAreaCells = [];
     this.pellets = [];
   }
 
@@ -36,7 +38,11 @@ class MapGenerator {
     const flippedMazeHV = this.flipMaze(maze, quarterMazeConfig, true, true);
     this.stitchMaze(flippedMazeHV, quarterMazeConfig, true, true);
 
+    // final touches : outer ring, starting areas for monsters and player
     this.carveOuterRing(mapConfig);
+
+    this.putMonsterPen(mapConfig);
+    this.putPlayerStartArea(mapConfig);
 
     // const digger = new ROT.Map.IceyMaze(
     //   quarterMaze.width,
@@ -68,10 +74,22 @@ class MapGenerator {
 
     // put pellets
     for (let i = 0; i < this.freeCells.length; i++) {
-      this.pellets[i] = this.freeCells[i];
+      const tileKey = this.freeCells[i];
+      const tileIsInMonsterPen = this.monsterPenCells.indexOf(tileKey) !== -1;
+      const tileIsInPlayerArea = this.playerAreaCells.indexOf(tileKey) !== -1;
+      if (!tileIsInMonsterPen && !tileIsInPlayerArea) {
+        this.pellets[i] = this.freeCells[i];
+      }
     }
 
-    return [this.map, this.freeCells, this.pellets];
+    console.dir(this);
+    return [
+      this.map,
+      this.freeCells,
+      this.pellets,
+      this.monsterPenCells,
+      this.playerAreaCells,
+    ];
   }
 
   makeMaze(mazeConfig) {
@@ -117,7 +135,7 @@ class MapGenerator {
   checkRowsForLongWalls(mazemap, mazeConfig) {
     // punch holes into decidedly too long walls
     // check each row for long walls
-    console.log(mazemap);
+    // console.log(mazemap);
     for (let i = 0; i < mazeConfig.height + 2; i++) {
       let consecutiveWalls = 0;
       for (let j = 0; j < mazeConfig.width + 2; j++) {
@@ -249,6 +267,88 @@ class MapGenerator {
           this.map[key] = 0;
         }
       }
+    }
+  }
+
+  putMonsterPen(mapConfig) {
+    const penCenter = {
+      x: Math.floor(mapConfig.width / 2),
+      y: Math.ceil(mapConfig.height / 2) - 2,
+    };
+
+    const penMap = [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 0, 1, 1, 0],
+      [0, 1, 0, 0, 0, 1, 0],
+      [0, 1, 1, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ];
+
+    let penMapRowIndex = 0;
+    for (let row = penCenter.y - 3; row < penCenter.y + 2; row++) {
+      let penMapColumnIndex = 0;
+      for (let column = penCenter.x - 3; column < penCenter.x + 4; column++) {
+        // console.log('trying to put ', penMap[penMapRowIndex][penMapColumnIndex], ' at map coordinates ', column, ',', row);
+        const key = Game.toKey(column, row);
+        const penCell = penMap[penMapRowIndex][penMapColumnIndex];
+        this.map[key] = penCell;
+        const isCellInsidePen =
+          penCell === 0 &&
+          penMapRowIndex > 0 &&
+          penMapRowIndex < 3 &&
+          penMapColumnIndex > 1 &&
+          penMapColumnIndex < 5;
+        if (isCellInsidePen) {
+          this.monsterPenCells.push(key);
+        }
+        penMapColumnIndex++;
+      }
+      penMapRowIndex++;
+    }
+  }
+
+  putPlayerStartArea(mapConfig) {
+    const areaCenter = {
+      x: Math.floor(mapConfig.width / 2),
+      y: mapConfig.height - Math.ceil(mapConfig.height / 4) - 1,
+    };
+
+    const areaMap = [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 1, 1, 1, 1, 0],
+      [0, 1, 0, 0, 0, 1, 0],
+      [0, 1, 1, 0, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ];
+
+    let penMapRowIndex = 0;
+    for (let row = areaCenter.y - 2; row < areaCenter.y + 3; row++) {
+      let penMapColumnIndex = 0;
+      for (let column = areaCenter.x - 3; column < areaCenter.x + 4; column++) {
+        // console.log(
+        //   'trying to put ',
+        //   penMap[penMapRowIndex][penMapColumnIndex],
+        //   ' at map coordinates ',
+        //   column,
+        //   ',',
+        //   row
+        // );
+        const key = Game.toKey(column, row);
+        const areaCell = areaMap[penMapRowIndex][penMapColumnIndex];
+        this.map[key] = areaCell;
+
+        const isCellInsideArea =
+          areaCell === 0 &&
+          penMapRowIndex > 1 &&
+          penMapRowIndex < 4 &&
+          penMapColumnIndex > 1 &&
+          penMapColumnIndex < 5;
+        if (isCellInsideArea) {
+          this.playerAreaCells.push(key);
+        }
+        penMapColumnIndex++;
+      }
+      penMapRowIndex++;
     }
   }
 
