@@ -5,7 +5,6 @@ class Enemy {
     this.direction = null;
     this.glyph = ['\u03a9', '#ec5f67', '#212121'];
     this.count = countdown;
-    // this.draw();
   }
 
   getX() {
@@ -17,7 +16,11 @@ class Enemy {
   }
 
   draw() {
-    Game.display.draw(this.x + displayOffsetX, this.y + displayOffsetY, ...this.glyph);
+    Game.display.draw(
+      this.x + displayOffsetX,
+      this.y + displayOffsetY,
+      ...this.glyph
+    );
   }
 
   act() {
@@ -26,11 +29,7 @@ class Enemy {
       this.count--;
       return;
     }
-    // // go for the player's position
-    // const [x, y] = [Game.player.getX(), Game.player.getY()];
 
-    // // go for a tile further up the player's direction of travel
-    // const [x, y] = Game.player.getOffsetTarget();
     const [x, y] = this.setTarget();
 
     // set up ROT AStar pathfinding
@@ -69,29 +68,12 @@ class Enemy {
     const path = [];
     const getPath = function (x, y) {
       path.push([x, y]);
-
-      // // DEBUG: display path
-      // console.log('drawing tile');
-      // Game.display.drawOver(x, y, null, null, '#88e985');
     };
     astar.compute(this.x, this.y, getPath);
-    path.shift(); // remove Pedro's position
-    // console.log(path);
+    path.shift();
 
-    // check if distance with player was 1
-    const distance = Game.getDistance(
-      Game.player.getX(),
-      Game.player.getY(),
-      this.x,
-      this.y
-    );
     if (Game.startsTurnNextToPlayer(this)) {
       Game.playerCaptured = true;
-      // alert('Player captured!');
-      // Player captured logic
-      // Game.engine.lock();
-      // this.draw();
-      // alert('Game over - you were captured by Pedro!');
     } else {
       console.log(`${this.name} path: ${path}`);
       if (path.length === 0) {
@@ -107,14 +89,8 @@ class Enemy {
         return;
       }
 
-      // DEBUG: display path
-      // Game.display.drawOver(x, y, null, null, '#ec5f67');
-      // setTimeout(function () {}, 1000);
-
       // restore the display of the origin tile
       Game.drawMapAt(this.x, this.y);
-      // const tileGlyph = Glyphs[Game.map[originKey]];
-      // Game.display.draw(this.x, this.y, ...tileGlyph);
 
       // update position and display of the enemy
       this.computeDirection(x, y);
@@ -124,8 +100,6 @@ class Enemy {
       this.x = x;
       this.y = y;
       this.draw();
-      // debug
-      // console.log(this.name + ' has moved');
     }
   }
 
@@ -177,6 +151,8 @@ class Pinky extends Enemy {
     return [x, y];
   }
 }
+
+/** The foolowing enemy classes are bugged for the moment
 
 class Clyde extends Enemy {
   constructor(x, y) {
@@ -234,3 +210,4 @@ class Inky extends Enemy {
     return [targetX, targetY];
   }
 }
+ */

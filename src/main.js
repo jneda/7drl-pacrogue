@@ -2,7 +2,7 @@ const displayConfig = {
   width: 27,
   height: 31,
   fontFamily: 'VGA',
-  fontSize: 24,
+  fontSize: 16,
   forceSquareRatio: true,
   bg: "#212121",
 };
@@ -36,27 +36,25 @@ const Game = {
     let title = 'PacRogue';
     const titleLength = title.length;
     title = '%c{#fdc253}'.concat(title);
-    // console.log(title);
     const titleX = Math.floor(displayConfig.width / 2 - titleLength / 2);
     const titleY = Math.floor(displayConfig.height / 4);
 
-    // console.log(this.display);
     this.display.drawText(titleX, titleY, title);
 
     let description = 'A 7 Day Roguelike';
     const descriptionLength = description.length;
     description = '%c{#b2b8c2}'.concat(description);
     const descriptionX = Math.floor(displayConfig.width / 2 - descriptionLength / 2);
-    const descriptionY = Math.floor(displayConfig.height / 3);
+    const descriptionY = titleY + 2;
 
     this.display.drawText(descriptionX, descriptionY, description);
 
-    let instructions = '%c{#b2b8c2}You are the yellow @.\n\n' +
+    let instructions = '%c{#ffffff}You are the yellow @.\n\n' +
     'Try to eat all the blue pills without getting caught!\n\n' +
     'Move around using the keyboard arrows.\n\n' +
     'Press any key to start.';
     const instructionsX = Math.floor(displayConfig.width / 8);
-    const instructionsY = descriptionY + 2;
+    const instructionsY = descriptionY + 4;
     const instructionsWidth = displayConfig.width - instructionsX * 2;
 
     this.display.drawText(instructionsX, instructionsY, instructions, instructionsWidth);
@@ -68,11 +66,9 @@ const Game = {
     let title = 'You won this level!';
     const titleLength = title.length;
     title = '%c{#fdc253}'.concat(title);
-    // console.log(title);
     const titleX = Math.floor(displayConfig.width / 2 - titleLength / 2);
     const titleY = Math.floor(displayConfig.height / 4);
 
-    // console.log(this.display);
     this.display.drawText(titleX, titleY, title);
 
     let scoreText = 'Your score: ' + this.score.toString();
@@ -99,11 +95,9 @@ const Game = {
     let title = 'You lost this level!';
     const titleLength = title.length;
     title = '%c{#ec5f67}'.concat(title);
-    // console.log(title);
     const titleX = Math.floor(displayConfig.width / 2 - titleLength / 2);
     const titleY = Math.floor(displayConfig.height / 4);
 
-    // console.log(this.display);
     this.display.drawText(titleX, titleY, title);
 
     let scoreText = 'Your score: ' + this.score.toString();
@@ -126,11 +120,6 @@ const Game = {
   },
 
   reset() {
-    // this.map = {};
-    // this.freeCells = [];
-    // this.monsterPenCells = [];
-    // this.playerAreaCells = [];
-    // this.pellets = [];
     this.scheduler.clear();
     this.player = null;
     this.playerCaptured = false;
@@ -150,7 +139,6 @@ const Game = {
   },
 
   handleEvent(event) {
-    // console.log(this);
     window.removeEventListener('keydown', this);
     this.display.clear();
     this.startNewMap();
@@ -166,9 +154,7 @@ const Game = {
       this.monsterPenCells,
       this.playerAreaCells,
     ] = mapGenerator.init();
-    // console.dir(this.map);
 
-    // this.generateGoodies();
     this.drawMap();
 
     this.actors.push(this.createBeing([this.playerAreaCells[1]], Player));
@@ -176,7 +162,6 @@ const Game = {
     this.actorKeys.push(this.getActorKey(this.player));
 
     const monstersNumber = 4;
-    // const monsters = [Blinky, Pinky, Inky, Clyde];
     const monsters = [Blinky, Pinky, Blinky, Pinky];
     for (let i = 0; i < monstersNumber; i++) {
       const enemy = this.createBeing([this.monsterPenCells[i]], monsters[i], i);

@@ -2,3 +2,12 @@
   font-family: 'VGA';
   src: url('/font/WebPlus_IBM_VGA_8x16.woff') format('woff');
 }
+
+body {
+  background-color: #15171c;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  align-items: center;
+}

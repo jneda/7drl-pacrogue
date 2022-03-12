@@ -23,9 +23,6 @@ class MapGenerator {
     // generate top left quadrant
     const maze = this.makeMaze(quarterMazeConfig);
 
-    // // add some rooms ?
-    // this.spreadRooms(maze, quarterMazeConfig);
-
     this.map = maze.map;
 
     // mirror and paste the maze onto other quadrants
@@ -44,28 +41,6 @@ class MapGenerator {
     this.putMonsterPen(mapConfig);
     this.putPlayerStartArea(mapConfig);
 
-    // const digger = new ROT.Map.IceyMaze(
-    //   quarterMaze.width,
-    //   quarterMaze.height
-    // );
-
-    // digger.create(
-    //   function (x, y, value) {
-    //     // carve out the outer ring
-    //     if (this.isOuterRing(x, y, quarterMaze) || this.isInnerRing(x, y, quarterMaze)) {
-    //       value = 0;
-    //     }
-    //     const key = this.toKey(x, y);
-    //     if (!value) {
-    //       this.freeCells.push(key);
-    //     }
-    //     this.map[key] = value;
-    //   }.bind(this)
-    // ); // necessary to ensure the callback is called within a correct context
-
-    // this.spreadRooms();
-
-    // get free cells
     for (const key in this.map) {
       if (this.map[key] === 0) {
         this.freeCells.push(key);
@@ -82,7 +57,6 @@ class MapGenerator {
       }
     }
 
-    // console.dir(this);
     return [
       this.map,
       this.freeCells,
@@ -103,58 +77,32 @@ class MapGenerator {
       1
     );
     digger.create(function (x, y, value) {
-      // // carve out the outer ring
-      // if (
-      //   this.isOuterRing(x, y, mazeConfig)
-      // ) {
-      //   value = 0;
-      // }
-
-      // // carve out the inner ring
-      // if (
-      //   this.isInnerRing(x, y, mazeConfig)
-      // ) {
-      //   value = 0;
-      // }
-
       const key = Game.toKey(x, y);
       maze.map[key] = value;
     });
-    // console.log(maze.map);
 
     maze.map = this.checkRowsForLongWalls(maze.map, mazeConfig);
 
     maze.map = this.checkColumnsForLongWalls(maze.map, mazeConfig);
 
-    // console.log(maze.map);
-
-    // console.dir(maze);
     return maze;
   }
 
   checkRowsForLongWalls(mazemap, mazeConfig) {
     // punch holes into decidedly too long walls
+
     // check each row for long walls
-    // console.log(mazemap);
     for (let i = 0; i < mazeConfig.height + 2; i++) {
       let consecutiveWalls = 0;
       for (let j = 0; j < mazeConfig.width + 2; j++) {
         const isInBounds =
           j >= 2 && j <= mazeConfig.width && i >= 2 && i < mazeConfig.height;
         if (isInBounds) {
-          // console.log(
-          //   'checking tile ',
-          //   Game.toKey(j, i),
-          //   ' : ',
-          //   maze.map[Game.toKey(j, i)]
-          // );
           if (mazemap[Game.toKey(j, i)] === 0) {
             consecutiveWalls = 0;
           } else {
-            // console.log('found wall');
             consecutiveWalls++;
             if (consecutiveWalls > 3) {
-              // console.log('found 4th consecutive wall');
               consecutiveWalls = 0;
               // dig out the fourth wall
               mazemap[Game.toKey(j, i)] = 0;
@@ -182,19 +130,11 @@ class MapGenerator {
         const isInBounds =
           j >= 2 && j <= mazeConfig.width && i >= 2 && i < mazeConfig.height;
         if (isInBounds) {
-          // console.log(
-          //   'checking tile ',
-          //   Game.toKey(j, i),
-          //   ' : ',
-          //   maze.map[Game.toKey(j, i)]
-          // );
           if (mazemap[Game.toKey(j, i)] === 0) {
             consecutiveWalls = 0;
           } else {
-            // console.log('found wall');
             consecutiveWalls++;
             if (consecutiveWalls > 3) {
-              // console.log('found 4th consecutive wall');
               consecutiveWalls = 0;
 
               mazemap[Game.toKey(j, i)] = 0;
@@ -288,7 +228,6 @@ class MapGenerator {
     for (let row = penCenter.y - 3; row < penCenter.y + 2; row++) {
       let penMapColumnIndex = 0;
       for (let column = penCenter.x - 3; column < penCenter.x + 4; column++) {
-        // console.log('trying to put ', penMap[penMapRowIndex][penMapColumnIndex], ' at map coordinates ', column, ',', row);
         const key = Game.toKey(column, row);
         const penCell = penMap[penMapRowIndex][penMapColumnIndex];
         this.map[key] = penCell;
@@ -325,14 +264,6 @@ class MapGenerator {
     for (let row = areaCenter.y - 2; row < areaCenter.y + 3; row++) {
       let penMapColumnIndex = 0;
       for (let column = areaCenter.x - 3; column < areaCenter.x + 4; column++) {
-        // console.log(
-        //   'trying to put ',
-        //   penMap[penMapRowIndex][penMapColumnIndex],
-        //   ' at map coordinates ',
-        //   column,
-        //   ',',
-        //   row
-        // );
         const key = Game.toKey(column, row);
         const areaCell = areaMap[penMapRowIndex][penMapColumnIndex];
         this.map[key] = areaCell;
