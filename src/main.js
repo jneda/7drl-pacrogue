@@ -4,6 +4,7 @@ const displayConfig = {
   fontFamily: 'VGA',
   fontSize: 16,
   forceSquareRatio: true,
+  bg: "#212121",
 };
 
 const Glyphs = {
@@ -27,11 +28,54 @@ const Game = {
   ananas: null,
   score: 0,
 
+  start() {
+    let title = 'PacRogue';
+    const titleLength = title.length;
+    title = '%c{#fdc253}'.concat(title);
+    // console.log(title);
+    const titleX = Math.floor(displayConfig.width / 2 - titleLength / 2);
+    const titleY = Math.floor(displayConfig.height / 4);
+
+    // console.log(this.display);
+    this.display.drawText(titleX, titleY, title);
+
+    let description = 'A 7 Day Roguelike';
+    const descriptionLength = description.length;
+    description = '%c{#b2b8c2}'.concat(description);
+    const descriptionX = Math.floor(displayConfig.width / 2 - descriptionLength / 2);
+    const descriptionY = Math.floor(displayConfig.height / 3);
+
+    this.display.drawText(descriptionX, descriptionY, description);
+
+    let instructions = '%c{#b2b8c2}You are the yellow @.\n' +
+    'Try to eat all the blue pills without getting caught!\n' +
+    'Move around using the keyboard arrows.\n\n' +
+    'Press any key to start.';
+    const instructionsX = Math.floor(displayConfig.width / 8);
+    const instructionsY = descriptionY + 2;
+    const instructionsWidth = displayConfig.width - instructionsX * 2;
+
+    this.display.drawText(instructionsX, instructionsY, instructions, instructionsWidth);
+
+  },
+
   init() {
     // create and store ROT console
     this.display = new ROT.Display(displayConfig);
     document.getElementById('canvas').appendChild(this.display.getContainer());
 
+    this.start();
+
+    window.addEventListener('keydown', this);
+  },
+
+  handleEvent(event) {
+    console.log(this);
+    window.removeEventListener('keydown', this);
+    this.startNewMap();
+  },
+
+  startNewMap() {
     // generate the map
     const mapGenerator = new MapGenerator(mapConfig);
     [
@@ -50,7 +94,7 @@ const Game = {
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
 
-    const monstersNumber = 4;
+    const monstersNumber = 3;
     const monsters = [Blinky, Inky, Pinky, Clyde];
     for (let i = 0; i < monstersNumber; i++) {
       const enemy = this.createBeing([this.monsterPenCells[i]], monsters[i]);
