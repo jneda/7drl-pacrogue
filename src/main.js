@@ -2,15 +2,18 @@ const displayConfig = {
   width: 27,
   height: 31,
   fontFamily: 'VGA',
-  fontSize: 16,
+  fontSize: 24,
   forceSquareRatio: true,
   bg: "#212121",
 };
 
+const displayOffsetX = Math.floor((displayConfig.width - mapConfig.width) / 2);
+const displayOffsetY = Math.floor((displayConfig.height - mapConfig.height) / 2);
+
 const Glyphs = {
-  0: ['', '#b2b8c2', '#15171c'],
+  0: ['', '#b2b8c2', '#212121'],
   1: ['', '#ffffff', '#b2b8c2'],
-  2: ['¤', '#58c2c0', '#15171c'],
+  2: ['¤', '#58c2c0', '#212121'],
   3: ['.', '#58c2c0', null],
 };
 
@@ -21,11 +24,12 @@ const Game = {
   monsterPenCells: [],
   playerAreaCells: [],
   pellets: [],
+  scheduler: null,
   engine: null,
   player: null,
+  playerCaptured: false,
   actors: [],
   actorKeys: [],
-  ananas: null,
   score: 0,
 
   start() {
@@ -47,8 +51,8 @@ const Game = {
 
     this.display.drawText(descriptionX, descriptionY, description);
 
-    let instructions = '%c{#b2b8c2}You are the yellow @.\n' +
-    'Try to eat all the blue pills without getting caught!\n' +
+    let instructions = '%c{#b2b8c2}You are the yellow @.\n\n' +
+    'Try to eat all the blue pills without getting caught!\n\n' +
     'Move around using the keyboard arrows.\n\n' +
     'Press any key to start.';
     const instructionsX = Math.floor(displayConfig.width / 8);
@@ -57,6 +61,82 @@ const Game = {
 
     this.display.drawText(instructionsX, instructionsY, instructions, instructionsWidth);
 
+  },
+
+  levelWon() {
+    this.display.clear();
+    let title = 'You won this level!';
+    const titleLength = title.length;
+    title = '%c{#fdc253}'.concat(title);
+    // console.log(title);
+    const titleX = Math.floor(displayConfig.width / 2 - titleLength / 2);
+    const titleY = Math.floor(displayConfig.height / 4);
+
+    // console.log(this.display);
+    this.display.drawText(titleX, titleY, title);
+
+    let scoreText = 'Your score: ' + this.score.toString();
+    const scoreLength = scoreText.length;
+    scoreText = '%c{#b2b8c2}'.concat(scoreText);
+    const scoreX = Math.floor(displayConfig.width / 2 - scoreLength / 2);
+    const scoreY = titleY + 2;
+
+    this.display.drawText(scoreX, scoreY, scoreText);
+
+    let instructions = 'Press any key to restart';
+    const instructionsLength = instructions.length;
+    instructions = '%c{#b2b8c2}'.concat(instructions);
+    const instructionsX = Math.floor(displayConfig.width / 2 - instructionsLength / 2);
+    const instructionsY = scoreY + 2;
+
+    this.display.drawText(instructionsX, instructionsY, instructions);
+
+    this.reset();
+  },
+
+  levelLost() {
+    this.display.clear();
+    let title = 'You lost this level!';
+    const titleLength = title.length;
+    title = '%c{#ec5f67}'.concat(title);
+    // console.log(title);
+    const titleX = Math.floor(displayConfig.width / 2 - titleLength / 2);
+    const titleY = Math.floor(displayConfig.height / 4);
+
+    // console.log(this.display);
+    this.display.drawText(titleX, titleY, title);
+
+    let scoreText = 'Your score: ' + this.score.toString();
+    const scoreLength = scoreText.length;
+    scoreText = '%c{#b2b8c2}'.concat(scoreText);
+    const scoreX = Math.floor(displayConfig.width / 2 - scoreLength / 2);
+    const scoreY = titleY + 2;
+
+    this.display.drawText(scoreX, scoreY, scoreText);
+
+    let instructions = 'Press any key to restart';
+    const instructionsLength = instructions.length;
+    instructions = '%c{#b2b8c2}'.concat(instructions);
+    const instructionsX = Math.floor(displayConfig.width / 2 - instructionsLength / 2);
+    const instructionsY = scoreY + 2;
+
+    this.display.drawText(instructionsX, instructionsY, instructions);
+
+    this.reset();
+  },
+
+  reset() {
+    // this.map = {};
+    // this.freeCells = [];
+    // this.monsterPenCells = [];
+    // this.playerAreaCells = [];
+    // this.pellets = [];
+    this.scheduler.clear();
+    this.player = null;
+    this.playerCaptured = false;
+    this.actors = [];
+    this.actorKeys = [];
+    this.score = 0;
   },
 
   init() {
@@ -70,8 +150,9 @@ const Game = {
   },
 
   handleEvent(event) {
-    console.log(this);
+    // console.log(this);
     window.removeEventListener('keydown', this);
+    this.display.clear();
     this.startNewMap();
   },
 
@@ -94,20 +175,22 @@ const Game = {
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
 
-    const monstersNumber = 3;
-    const monsters = [Blinky, Inky, Pinky, Clyde];
+    const monstersNumber = 4;
+    // const monsters = [Blinky, Pinky, Inky, Clyde];
+    const monsters = [Blinky, Pinky, Blinky, Pinky];
     for (let i = 0; i < monstersNumber; i++) {
-      const enemy = this.createBeing([this.monsterPenCells[i]], monsters[i]);
+      const enemy = this.createBeing([this.monsterPenCells[i]], monsters[i], i);
       this.actors.push(enemy);
       this.actorKeys.push(this.getActorKey(enemy));
     }
 
     // set up the scheduler
-    const scheduler = new ROT.Scheduler.Simple();
+    this.scheduler = new ROT.Scheduler.Simple();
     for (const actor of this.actors) {
-      scheduler.add(actor, true);
+      this.scheduler.add(actor, true);
     }
-    this.engine = new ROT.Engine(scheduler);
+    this.scheduler.add(new IsGameOver(), true);
+    this.engine = new ROT.Engine(this.scheduler);
     this.engine.start();
 
     this.score = 0;
@@ -125,6 +208,19 @@ const Game = {
     const actorX = actor.getX();
     const actorY = actor.getY();
     return this.toKey(actorX, actorY);
+  },
+
+  startsTurnNextToPlayer(enemy) {
+    const [playerX, playerY] = [this.player.getX(), this.player.getY()];
+    const [deltaX, deltaY] = [playerX - enemy.x, playerY - enemy.y];
+    const neighbourDeltas = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (const neighbourDelta of neighbourDeltas) {
+      const [neighbourX, neighbourY] = neighbourDelta;
+      if (neighbourX === deltaX && neighbourY === deltaY) {
+        return true;
+      }
+    }
+    return false;
   },
 
   getBlinkysKey() {
@@ -176,9 +272,12 @@ const Game = {
     }
   },
 
-  createBeing(positions, what) {
+  createBeing(positions, what, countdown) {
     const key = this.getRandomFreeCellKey(positions);
     const [x, y] = this.toCoords(key);
+    if (countdown) {
+      return new what(x, y, countdown);
+    }
     return new what(x, y);
   },
 
@@ -188,14 +287,13 @@ const Game = {
     return key;
   },
 
-  drawMap() {
-    for (const key in this.map) {
+  drawMap() {for (const key in this.map) {
       const [x, y] = this.toCoords(key);
       const glyph = Glyphs[this.map[key]];
-      this.display.draw(x, y, ...glyph);
+      this.display.draw(x + displayOffsetX, y + displayOffsetY, ...glyph);
 
       if (this.pellets.indexOf(key) !== -1) {
-        this.display.drawOver(x, y, ...Glyphs['3']);
+        this.display.drawOver(x + displayOffsetX, y + displayOffsetY, ...Glyphs['3']);
       }
     }
   },
@@ -203,10 +301,10 @@ const Game = {
   drawMapAt(x, y) {
     const tileKey = this.toKey(x, y);
     const glyph = Glyphs[this.map[tileKey]];
-    this.display.draw(x, y, ...glyph);
+    this.display.draw(x + displayOffsetX, y + displayOffsetY, ...glyph);
 
     if (this.pellets.indexOf(tileKey) !== -1) {
-      this.display.drawOver(x, y, ...Glyphs['3']);
+      this.display.drawOver(x + displayOffsetX, y + displayOffsetY, ...Glyphs['3']);
     }
   },
 };

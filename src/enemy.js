@@ -1,10 +1,10 @@
 class Enemy {
-  constructor(x, y) {
+  constructor(x, y, countdown) {
     this.x = x;
     this.y = y;
     this.direction = null;
-    this.glyph = ['\u03a9', '#ec5f67', null];
-    this.count = 0;
+    this.glyph = ['\u03a9', '#ec5f67', '#212121'];
+    this.count = countdown;
     // this.draw();
   }
 
@@ -17,7 +17,7 @@ class Enemy {
   }
 
   draw() {
-    Game.display.draw(this.x, this.y, ...this.glyph);
+    Game.display.draw(this.x + displayOffsetX, this.y + displayOffsetY, ...this.glyph);
   }
 
   act() {
@@ -43,7 +43,26 @@ class Enemy {
         tileIsBehind = x === tileBehind.x && y === tileBehind.y;
       }
 
-      return tileIsEmpty && !tileIsBehind;
+      const tileHasActor = Game.hasActor(Game.toKey(x, y));
+      const tileHasPlayer =
+        Game.toKey(x, y) === Game.toKey(Game.player.getX(), Game.player.getY());
+      const thisTile = Game.toKey(this.x, this.y);
+      const tileHasEnemy = tileHasActor && !tileHasPlayer && !thisTile;
+
+      const debugPath = {
+        x: x,
+        y: y,
+        tileIsEmpty: tileIsEmpty,
+        tileIsBehind: tileIsBehind,
+        tileHasActor: tileHasActor,
+        tileHasPlayer: tileHasPlayer,
+      };
+
+      if (tileHasEnemy) {
+        console.log(debugPath);
+      }
+
+      return tileIsEmpty && !tileIsBehind && !tileHasEnemy;
     }.bind(this);
     const astar = new ROT.Path.AStar(x, y, isPassable, { topology: 4 });
     // console.dir(astar);
@@ -51,8 +70,8 @@ class Enemy {
     const getPath = function (x, y) {
       path.push([x, y]);
 
-      //   // DEBUG: display path
-      //   console.log('drawing tile');
+      // // DEBUG: display path
+      // console.log('drawing tile');
       // Game.display.drawOver(x, y, null, null, '#88e985');
     };
     astar.compute(this.x, this.y, getPath);
@@ -66,24 +85,29 @@ class Enemy {
       this.x,
       this.y
     );
-    if (distance === 1) {
-      alert('Player captured!');
+    if (Game.startsTurnNextToPlayer(this)) {
+      Game.playerCaptured = true;
+      // alert('Player captured!');
       // Player captured logic
       // Game.engine.lock();
       // this.draw();
       // alert('Game over - you were captured by Pedro!');
     } else {
       console.log(`${this.name} path: ${path}`);
+      if (path.length === 0) {
+        console.log('path is empty');
+        return;
+      }
       const [x, y] = path[0];
       const destinationKey = Game.toKey(x, y);
 
       // prevent enemy from walking onto another actor
-      // TODO: allow in case of actor being the player
+      // // TODO: allow in case of actor being the player
       if (Game.hasActor(destinationKey)) {
         return;
       }
 
-      // // DEBUG: display path
+      // DEBUG: display path
       // Game.display.drawOver(x, y, null, null, '#ec5f67');
       // setTimeout(function () {}, 1000);
 
@@ -128,7 +152,7 @@ class Enemy {
 class Blinky extends Enemy {
   constructor(x, y) {
     super(x, y);
-    this.glyph = ['\u03a9', '#ec5f67', '#15171c'];
+    this.glyph = ['\u03a9', '#ec5f67', '#212121'];
     this.name = 'Blinky';
     this.draw();
   }
@@ -142,8 +166,7 @@ class Blinky extends Enemy {
 class Pinky extends Enemy {
   constructor(x, y) {
     super(x, y);
-    this.count = 1;
-    this.glyph = ['\u03a9', '#bf83c0', '#15171c'];
+    this.glyph = ['\u03a9', '#bf83c0', '#212121'];
     this.name = 'Pinky';
     this.draw();
   }
@@ -158,10 +181,9 @@ class Pinky extends Enemy {
 class Clyde extends Enemy {
   constructor(x, y) {
     super(x, y);
-    this.count = 3;
     this.origin = [x, y];
     console.log('Clyde origin: ', this.origin);
-    this.glyph = ['\u03a9', '#88e985', '#15171c'];
+    this.glyph = ['\u03a9', '#88e985', '#212121'];
     this.name = 'Clyde';
     this.draw();
   }
@@ -180,8 +202,7 @@ class Clyde extends Enemy {
 class Inky extends Enemy {
   constructor(x, y) {
     super(x, y);
-    this.count = 2;
-    this.glyph = ['\u03a9', '#5485c0', '#15171c'];
+    this.glyph = ['\u03a9', '#5485c0', '#212121'];
     this.name = 'Inky';
     this.draw();
   }
@@ -192,7 +213,7 @@ class Inky extends Enemy {
     const [blinkyX, blinkyY] = Game.toCoords(Game.getBlinkysKey());
 
     function clampX(x) {
-      x = Math.min(x, mapConfig.width -2);
+      x = Math.min(x, mapConfig.width - 2);
       x = Math.max(x, 1);
       return x;
     }

@@ -78,7 +78,7 @@ class MapGenerator {
       const tileIsInMonsterPen = this.monsterPenCells.indexOf(tileKey) !== -1;
       const tileIsInPlayerArea = this.playerAreaCells.indexOf(tileKey) !== -1;
       if (!tileIsInMonsterPen && !tileIsInPlayerArea) {
-        this.pellets[i] = this.freeCells[i];
+        this.pellets.push(this.freeCells[i]);
       }
     }
 

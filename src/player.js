@@ -3,12 +3,12 @@ class Player {
     this.x = x;
     this.y = y;
     this.direction = null;
-    this.glyph = ['@', '#fdc253', '#15171c'];
+    this.glyph = ['@', '#fdc253', '#212121'];
     this.draw();
   }
 
   draw() {
-    Game.display.draw(this.x, this.y, ...this.glyph);
+    Game.display.draw(this.x + displayOffsetX, this.y + displayOffsetY, ...this.glyph);
   }
 
   act() {
