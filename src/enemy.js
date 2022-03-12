@@ -4,6 +4,7 @@ class Enemy {
     this.y = y;
     this.direction = null;
     this.glyph = ['\u03a9', '#ec5f67', null];
+    this.count = 0;
     // this.draw();
   }
 
@@ -20,6 +21,11 @@ class Enemy {
   }
 
   act() {
+    // use this.count to make the enemys start moving after a delay in turns
+    if (this.count > 0) {
+      this.count--;
+      return;
+    }
     // // go for the player's position
     // const [x, y] = [Game.player.getX(), Game.player.getY()];
 
@@ -53,12 +59,21 @@ class Enemy {
     path.shift(); // remove Pedro's position
     // console.log(path);
 
-    if (path.length < 2) {
+    // check if distance with player was 1
+    const distance = Game.getDistance(
+      Game.player.getX(),
+      Game.player.getY(),
+      this.x,
+      this.y
+    );
+    if (distance === 1) {
+      alert('Player captured!');
       // Player captured logic
       // Game.engine.lock();
       // this.draw();
       // alert('Game over - you were captured by Pedro!');
     } else {
+      console.log(`${this.name} path: ${path}`);
       const [x, y] = path[0];
       const destinationKey = Game.toKey(x, y);
 
@@ -127,13 +142,74 @@ class Blinky extends Enemy {
 class Pinky extends Enemy {
   constructor(x, y) {
     super(x, y);
+    this.count = 1;
     this.glyph = ['\u03a9', '#bf83c0', '#15171c'];
     this.name = 'Pinky';
     this.draw();
   }
 
   setTarget() {
-    const [x, y] = Game.player.getOffsetTarget();
+    const offset = 4;
+    const [x, y] = Game.player.getOffsetTarget(offset);
     return [x, y];
+  }
+}
+
+class Clyde extends Enemy {
+  constructor(x, y) {
+    super(x, y);
+    this.count = 3;
+    this.origin = [x, y];
+    console.log('Clyde origin: ', this.origin);
+    this.glyph = ['\u03a9', '#88e985', '#15171c'];
+    this.name = 'Clyde';
+    this.draw();
+  }
+
+  setTarget() {
+    const [playerX, playerY] = [Game.player.getX(), Game.player.getY()];
+    const distance = Game.getDistance(playerX, playerY, this.x, this.y);
+
+    if (distance >= 8) {
+      return [playerX, playerY];
+    }
+    return origin;
+  }
+}
+
+class Inky extends Enemy {
+  constructor(x, y) {
+    super(x, y);
+    this.count = 2;
+    this.glyph = ['\u03a9', '#5485c0', '#15171c'];
+    this.name = 'Inky';
+    this.draw();
+  }
+
+  setTarget() {
+    const offset = 2;
+    const [playerX, playerY] = Game.player.getOffsetTarget(offset);
+    const [blinkyX, blinkyY] = Game.toCoords(Game.getBlinkysKey());
+
+    function clampX(x) {
+      x = Math.min(x, mapConfig.width -2);
+      x = Math.max(x, 1);
+      return x;
+    }
+
+    function clampY(y) {
+      y = Math.min(y, mapConfig.height - 2);
+      y = Math.max(y, 1);
+      return y;
+    }
+
+    let deltaX = (playerX - blinkyX) * 2;
+    let deltaY = (playerY - blinkyY) * 2;
+
+    const targetX = clampX(blinkyX + deltaX);
+    const targetY = clampY(blinkyY + deltaY);
+
+    console.log(`${this.name} target: ${targetX},${targetY}`);
+    return [targetX, targetY];
   }
 }

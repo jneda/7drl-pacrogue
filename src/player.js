@@ -101,9 +101,8 @@ class Player {
     return this.direction;
   }
 
-  getOffsetTarget() {
+  getOffsetTarget(offset) {
     // debug: draw direction with offset
-    let offset = 4;
     let [targetX, targetY] = [0, 0];
     const [dx, dy] = this.direction;
     while (!Game.isPassable(targetX, targetY)) {

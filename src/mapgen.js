@@ -82,7 +82,7 @@ class MapGenerator {
       }
     }
 
-    console.dir(this);
+    // console.dir(this);
     return [
       this.map,
       this.freeCells,

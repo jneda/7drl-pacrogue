@@ -46,14 +46,14 @@ const Game = {
     // this.generateGoodies();
     this.drawMap();
 
-    this.actors.push(this.createBeing(this.playerAreaCells, Player));
+    this.actors.push(this.createBeing([this.playerAreaCells[1]], Player));
     this.player = this.actors[0];
     this.actorKeys.push(this.getActorKey(this.player));
 
-    const monstersNumber = 2;
-    const monsters = [Blinky, Pinky, Blinky, Pinky];
+    const monstersNumber = 4;
+    const monsters = [Blinky, Inky, Pinky, Clyde];
     for (let i = 0; i < monstersNumber; i++) {
-      const enemy = this.createBeing(this.monsterPenCells, monsters[i]);
+      const enemy = this.createBeing([this.monsterPenCells[i]], monsters[i]);
       this.actors.push(enemy);
       this.actorKeys.push(this.getActorKey(enemy));
     }
@@ -83,6 +83,16 @@ const Game = {
     return this.toKey(actorX, actorY);
   },
 
+  getBlinkysKey() {
+    let blinky;
+    for (let i = 0; i < this.actors.length; i++) {
+      if (this.actors[i].name === 'Blinky') {
+        blinky = this.actors[i];
+        return this.getActorKey(blinky);
+      }
+    }
+  },
+
   updateActorKey(originKey, destinationKey) {
     const actorId = this.actorKeys.indexOf(originKey);
     this.actorKeys[actorId] = destinationKey;
@@ -101,6 +111,13 @@ const Game = {
     x = parseInt(x);
     y = parseInt(y);
     return [x, y];
+  },
+
+  getDistance(x1, y1, x2, y2) {
+    const distance = Math.round(
+      Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+    );
+    return distance;
   },
 
   generateGoodies() {
